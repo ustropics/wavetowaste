@@ -185,7 +185,7 @@
 
   /* ── Export / basemap dropdowns ─────────────────── */
   .navbar-dropdown { position: relative; flex-shrink: 0; }
-  .dropdown-menu { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: #0f1923; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,0.55); min-width: 210px; z-index: 4000; overflow: hidden; }
+  .dropdown-menu { display: none; position: fixed; background: #0f1923; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,0.55); min-width: 210px; z-index: 99999; overflow: hidden; }
   .dropdown-menu.open { display: block; }
   .dropdown-item { width: 100%; padding: 10px 14px; background: none; border: none; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-primary); font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; cursor: pointer; text-align: left; transition: background 0.15s; display: flex; align-items: center; gap: 9px; }
   .dropdown-item:last-child { border-bottom: none; }
@@ -211,6 +211,159 @@
   .nz-popup { font-family: 'DM Sans', sans-serif; font-size: 12px; line-height: 1.6; }
   .nz-popup-title { font-size: 13px; font-weight: 700; color: #ffc145; margin-bottom: 4px; }
   .nz-popup strong { color: #ffc145; font-weight: 600; }
+
+  /* ── Mobile: hamburger button ─────────────────────────────────── */
+  #mobileMenuBtn {
+    display: none; margin-left: auto; flex-shrink: 0;
+    padding: 7px 10px; border-radius: 6px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-primary); cursor: pointer;
+    align-items: center; justify-content: center; transition: all 0.2s;
+  }
+  #mobileMenuBtn:hover { background: var(--accent-dim); border-color: rgba(0, 136, 122,0.4); color: var(--accent); }
+  #mobileMenuBtn.open  { background: var(--accent-dim); border-color: rgba(0, 136, 122,0.45); color: var(--accent); }
+  #mobileMenuBtn svg   { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; display: block; }
+
+  /* ── Mobile: drawer ──────────────────────────────────────────── */
+  #mobileDrawer {
+    display: none; position: fixed;
+    top: var(--navbar-h); left: 0; right: 0; z-index: 1800;
+    background: rgba(10,15,20,0.98);
+    backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.65);
+    overflow-y: auto;
+    max-height: calc(100dvh - var(--navbar-h) - 52px);
+    animation: drawerSlideIn 0.22s ease;
+  }
+  #mobileDrawer.open { display: block; }
+  @keyframes drawerSlideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .drawer-inner { padding: 14px 16px 18px; }
+  .drawer-section { margin-bottom: 20px; }
+  .drawer-section:last-child { margin-bottom: 0; }
+  .drawer-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 1.2px;
+    text-transform: uppercase; color: var(--text-secondary);
+    margin-bottom: 9px; padding-bottom: 7px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .drawer-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .drawer-btn {
+    padding: 9px 15px; border-radius: 7px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-primary); font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: all 0.18s; display: flex; align-items: center; gap: 7px;
+    white-space: nowrap;
+  }
+  .drawer-btn:hover      { background: var(--accent-dim); border-color: rgba(0, 136, 122,0.4); color: var(--accent); }
+  .drawer-btn.active     { background: var(--accent-dim); border-color: rgba(0, 136, 122,0.45); color: var(--accent); }
+  .drawer-btn.warn-active { background: rgba(255,193,69,0.18); border-color: rgba(255,193,69,0.5); color: #ffc145; }
+  .drawer-btn svg        { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+  .drawer-model-btn      { flex: 1; min-width: 0; justify-content: center; font-size: 13px; padding: 10px 12px; }
+  .drawer-basemap-list, .drawer-export-list { display: flex; flex-direction: column; gap: 3px; }
+  .drawer-list-item {
+    padding: 10px 14px; border-radius: 7px; width: 100%;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    color: var(--text-secondary); font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500; cursor: pointer; text-align: left;
+    transition: all 0.15s; display: flex; align-items: center; gap: 9px;
+  }
+  .drawer-list-item:hover { background: rgba(255,255,255,0.07); color: var(--text-primary); }
+  .drawer-list-item.active { background: var(--accent-dim); color: var(--accent); border-color: rgba(0, 136, 122,0.3); font-weight: 600; }
+  .drawer-list-item svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+  /* ── Mobile: panel FAB ───────────────────────────────────────── */
+  #mobilePanelFab {
+    display: none; position: fixed; bottom: 20px; right: 16px; z-index: 1100;
+    width: 46px; height: 46px; border-radius: 50%;
+    background: var(--bg-panel); border: 1px solid rgba(255,255,255,0.13);
+    color: var(--text-primary); cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.45);
+    align-items: center; justify-content: center; transition: all 0.2s;
+  }
+  #mobilePanelFab:hover { background: var(--accent-dim); border-color: rgba(0, 136, 122,0.4); color: var(--accent); }
+  #mobilePanelFab svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ── Mobile: panel sheet backdrop ───────────────────────────── */
+  #mobilePanelBackdrop {
+    display: none; position: fixed; inset: 0; z-index: 1050;
+    background: rgba(0,0,0,0.42); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+  }
+  #mobilePanelBackdrop.visible { display: block; }
+
+  /* ── Breakpoint ≤ 768px ──────────────────────────────────────── */
+  @media (max-width: 768px) {
+    :root { --navbar-h: 50px; --mobile-stats-h: 50px; }
+
+    /* Hamburger visible; desktop navbar items hidden */
+    #mobileMenuBtn { display: flex; }
+    #navbar > .navbar-btn,
+    #navbar > .navbar-sep,
+    #navbar > .navbar-dropdown { display: none !important; }
+
+    /* Stats bar — pin flush under navbar */
+    .stats-bar {
+      position: fixed !important; bottom: auto !important;
+      top: var(--navbar-h) !important; left: 0 !important; right: 0 !important;
+      transform: none !important; border-radius: 0 !important;
+      border-left: none !important; border-right: none !important; border-top: none !important;
+      border-bottom: 1px solid rgba(255,255,255,0.07) !important;
+      padding: 0 12px !important; gap: 0 !important;
+      justify-content: space-around !important; align-items: center !important;
+      height: var(--mobile-stats-h) !important;
+      background: rgba(10,15,20,0.97) !important;
+      backdrop-filter: none !important; box-shadow: none !important;
+      z-index: 1950 !important;
+    }
+    .stat-value { font-size: 13px !important; }
+    .stat-label { font-size: 9px !important; }
+
+    /* Map — push down to clear navbar + stats bar */
+    #map { top: calc(var(--navbar-h) + var(--mobile-stats-h)) !important; }
+
+    /* Legend — hidden (accessible via panel) */
+    .legend { display: none !important; }
+
+    /* Control panel — bottom sheet */
+    .panel {
+      position: fixed !important; top: auto !important;
+      left: 0 !important; right: 0 !important; bottom: 0 !important;
+      width: 100% !important; max-width: 100% !important;
+      border-radius: 16px 16px 0 0 !important;
+      max-height: 74dvh !important; overflow-y: auto !important;
+      transform: translateY(calc(100% + 4px)) !important;
+      transition: transform 0.32s cubic-bezier(0.32, 0, 0.68, 1) !important;
+      z-index: 1060 !important;
+    }
+    .panel.mobile-open  { transform: translateY(0) !important; }
+    .panel-header       { border-radius: 16px 16px 0 0; padding: 12px 18px 14px; }
+    .panel-header::before {
+      content: ''; display: block; width: 36px; height: 4px;
+      border-radius: 2px; background: rgba(255,255,255,0.15);
+      margin: 0 auto 10px;
+    }
+    .panel-body { -webkit-overflow-scrolling: touch; }
+
+    /* FAB + zoom — keep out of each other's way */
+    #mobilePanelFab { display: flex; }
+    .leaflet-control-zoom { margin-bottom: 80px !important; }
+
+    /* Larger touch targets */
+    .toggle-compact { padding: 9px 10px; }
+    input[type="range"] { height: 5px; }
+    input[type="range"]::-webkit-slider-thumb { width: 20px; height: 20px; }
+  }
+
+  /* ── Very small: ≤ 400px ─────────────────────────────────────── */
+  @media (max-width: 400px) {
+    .stat-value { font-size: 11px !important; }
+    .stat-label { font-size: 8px !important; }
+    .drawer-model-btn { font-size: 12px; padding: 9px 8px; }
+  }
 </style>
 </head>
 <body>
@@ -285,7 +438,79 @@
       </button>
     </div>
   </div>
+
+  <!-- Mobile hamburger (hidden on desktop via CSS) -->
+  <button id="mobileMenuBtn" onclick="toggleMobileMenu()" aria-label="Open menu" aria-expanded="false">
+    <svg id="hamburgerIcon" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
 </div>
+
+<!-- ── Mobile drawer ──────────────────────────────────────────────────────── -->
+<div id="mobileDrawer" role="dialog" aria-label="Navigation menu">
+  <div class="drawer-inner">
+
+    <div class="drawer-section">
+      <div class="drawer-label">Model</div>
+      <div class="drawer-row">
+        <button class="drawer-btn drawer-model-btn active" id="drawerModel_mc"    onclick="_drawerSwitchModel('mc')">Monte Carlo</button>
+        <button class="drawer-btn drawer-model-btn"        id="drawerModel_det"   onclick="_drawerSwitchModel('det')">Deterministic</button>
+        <button class="drawer-btn drawer-model-btn"        id="drawerModel_stoch" onclick="_drawerSwitchModel('stoch')">Stochastic</button>
+      </div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-label">Tools</div>
+      <div class="drawer-row">
+        <button class="drawer-btn" id="drawerNestingFilter" onclick="_drawerToggleNesting()">
+          <span style="width:8px;height:8px;border-radius:50%;background:#ffc145;display:inline-block;flex-shrink:0;"></span>
+          Nesting Only
+        </button>
+        <button class="drawer-btn" onclick="_drawerShowChart('count')">
+          <svg viewBox="0 0 24 24"><rect x="3" y="12" width="4" height="9"/><rect x="10" y="7" width="4" height="14"/><rect x="17" y="3" width="4" height="18"/></svg>
+          Particles
+        </button>
+        <button class="drawer-btn" onclick="_drawerShowChart('mpw')">
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          MPW
+        </button>
+      </div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-label">Basemap</div>
+      <div class="drawer-basemap-list" id="drawerBasemapList"></div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-label">Export</div>
+      <div class="drawer-export-list">
+        <button class="drawer-list-item" onclick="_drawerExport(downloadShapefile)">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Shapefile (.zip)
+        </button>
+        <button class="drawer-list-item" onclick="_drawerExport(downloadNestingShapefile)">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Nesting Zones SHP
+        </button>
+        <button class="drawer-list-item" onclick="_drawerExport(downloadGeoJSON)">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Filtered GeoJSON
+        </button>
+        <button class="drawer-list-item" onclick="_drawerExport(downloadCSV)">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Filtered CSV
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Mobile: panel backdrop + FAB ─────────────────────────────────────────── -->
+<div id="mobilePanelBackdrop" onclick="closeMobilePanel()"></div>
+<button id="mobilePanelFab" onclick="openMobilePanel()" aria-label="Open layers panel" title="Layers &amp; Filters">
+  <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+</button>
 
 <!-- ── Map ──────────────────────────────────────────────────────────────── -->
 <div id="map"></div>
@@ -311,7 +536,7 @@
 
 <!-- ── Side panel ───────────────────────────────────────────────────────── -->
 <div class="panel" id="controlPanel">
-  <div class="panel-header" onclick="document.getElementById('controlPanel').classList.toggle('collapsed')">
+  <div class="panel-header" onclick="_panelHeaderClick()">
     <span class="panel-title" id="panelTitle">MC Florida Beaching</span>
     <span class="panel-toggle">&#9660;</span>
   </div>
@@ -367,7 +592,7 @@ if (!window._FLORIDA_DATA) window._FLORIDA_DATA = {};
 const _loadedScripts = new Set();
 
 const DATA_FILES = {
-  mc:    'florida_mc_data.js',
+  mc:    ["florida_mc_data_1.js"],
   det:   'florida_det_data.js',
   stoch: 'florida_stoch_data.js',
 };
@@ -381,6 +606,11 @@ function _loadScript(src) {
     s.onerror = () => reject(new Error('Failed to load: ' + src));
     document.head.appendChild(s);
   });
+}
+
+async function _loadDataset(key) {
+  const files = Array.isArray(DATA_FILES[key]) ? DATA_FILES[key] : [DATA_FILES[key]];
+  for (const f of files) await _loadScript(f);
 }
 
 // ── Map setup ──────────────────────────────────────────────────────────────
@@ -418,14 +648,19 @@ const BASEMAPS = {
   'osm-standard':        { label: '\u{1F30D} OpenStreetMap',           url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',                           attr: '&copy; OSM contributors', sub: 'abc', maxZoom: 19 },
 };
 let currentTileLayer = null;
+let _currentBasemapKey = 'carto-dark';
 function switchBasemap(key) {
   if (!BASEMAPS[key]) return;
   if (currentTileLayer) { map.removeLayer(currentTileLayer); }
   const bm = BASEMAPS[key];
   currentTileLayer = L.tileLayer(bm.url, { attribution: bm.attr, subdomains: bm.sub || 'abc', maxZoom: bm.maxZoom || 19 }).addTo(map);
+  _currentBasemapKey = key;
   document.querySelectorAll('#basemapMenu .dropdown-item').forEach(item => {
     item.style.color = item.dataset.bm === key ? 'var(--accent)' : '';
     item.style.fontWeight = item.dataset.bm === key ? '700' : '500';
+  });
+  document.querySelectorAll('.drawer-basemap-list .drawer-list-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.bm === key);
   });
 }
 function toggleBasemapDropdown(e) {
@@ -441,14 +676,23 @@ function toggleBasemapDropdown(e) {
     });
   }
   const open = menu.classList.toggle('open');
+  if (open) {
+    const rect = btn.getBoundingClientRect();
+    menu.style.top  = (rect.bottom + 4) + 'px';
+    menu.style.right = (window.innerWidth - rect.right) + 'px';
+    menu.style.left = 'auto';
+    closeExportDropdown();
+  }
   btn.classList.toggle('active', open);
-  if (open) closeExportDropdown();
 }
 function closeBasemapDropdown() {
   document.getElementById('basemapMenu').classList.remove('open');
   document.getElementById('basemapBtn').classList.remove('active');
 }
 switchBasemap('carto-dark');
+
+document.body.appendChild(document.getElementById('basemapMenu'));
+document.body.appendChild(document.getElementById('exportMenu'));
 
 // ── Loader UI ──────────────────────────────────────────────────────────────
 function showLoader(visible, msg) {
@@ -468,8 +712,8 @@ async function switchModel(key) {
   if (key === currentModel && allParticles.length > 0) return;
   showLoader(true, 'Loading ' + key.toUpperCase() + ' data\u2026');
   try {
-    if (!window._FLORIDA_DATA[key]) {
-      await _loadScript(DATA_FILES[key]);
+    if (!window._FLORIDA_DATA[key] || !window._FLORIDA_DATA[key]._fully_loaded) {
+      await _loadDataset(key);
     }
     currentModel = key;
     allParticles = (window._FLORIDA_DATA[key] || {}).particles || [];
@@ -499,6 +743,7 @@ async function switchModel(key) {
     hideChart();
     rebuildFilterPills();
     rebuildLayers();
+    _syncDrawerState();
   } catch (err) {
     console.error(err);
     showLoader(true, 'Failed to load data. Check that florida_' + key + '_data.js is in the same folder as this HTML.');
@@ -911,7 +1156,7 @@ function downloadChartImage() {
   const orig = document.getElementById("chartCanvas");
   const tmp = document.createElement("canvas"); tmp.width = orig.width; tmp.height = orig.height;
   const ctx = tmp.getContext("2d"); ctx.fillStyle = "#0f1923"; ctx.fillRect(0,0,tmp.width,tmp.height); ctx.drawImage(orig,0,0);
-  const a = document.createElement("a"); a.download = (currentChartType === "count" ? "particle_counts" : "mpw") + "_by_beach.png"; a.href = tmp.toDataURL("image/png"); a.click();
+  const a = document.createElement("a"); a.download = (currentChartType === "count" ? "particle_counts" : "mpw") + "_by_beach" + _exportSuffix() + ".png"; a.href = tmp.toDataURL("image/png"); a.click();
 }
 function downloadChartCSV() {
   if (!chartInstance) return;
@@ -919,14 +1164,22 @@ function downloadChartCSV() {
   const col = chartInstance.data.datasets[0].label;
   const blob = new Blob([`"Beach","${col}"\n` + labels.map((l,i) => `"${l}",${values[i]}`).join("\n")], { type: "text/csv" });
   const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url;
-  a.download = (currentChartType === "count" ? "particle_counts" : "mpw") + "_by_beach.csv"; a.click(); URL.revokeObjectURL(url);
+  a.download = (currentChartType === "count" ? "particle_counts" : "mpw") + "_by_beach" + _exportSuffix() + ".csv"; a.click(); URL.revokeObjectURL(url);
 }
 
 // ── Export dropdown ────────────────────────────────────────────────────────
 function toggleExportDropdown(e) {
   e.stopPropagation();
   const menu = document.getElementById("exportMenu"), btn = document.getElementById("exportBtn");
-  const open = menu.classList.toggle("open"); btn.classList.toggle("active", open);
+  const open = menu.classList.toggle("open");
+  if (open) {
+    const rect = btn.getBoundingClientRect();
+    menu.style.top   = (rect.bottom + 4) + 'px';
+    menu.style.right = (window.innerWidth - rect.right) + 'px';
+    menu.style.left  = 'auto';
+    closeBasemapDropdown();
+  }
+  btn.classList.toggle("active", open);
 }
 function closeExportDropdown() {
   document.getElementById("exportMenu").classList.remove("open");
@@ -984,11 +1237,25 @@ function _getShapefileFields() {
   ];
 }
 
+function _exportSuffix() {
+  const years = [...activeYears].sort((a, b) => a - b);
+  const yearStr = years.length === 0 ? 'all'
+    : years.length === 1 ? String(years[0])
+    : years[0] + '-' + years[years.length - 1];
+  let suffix = '_' + yearStr;
+  if (currentModel === 'mc' && allParticles.length > 0) {
+    const trials = allParticles[0].trials_total || 0;
+    if (trials > 0) suffix = '_n' + trials + suffix;
+  }
+  return suffix;
+}
+
 function downloadShapefile() {
   const pts = getFiltered(); if (!pts.length) return;
-  const blob = buildPointShapefileZip(pts, _getShapefileFields(), currentModel + "_florida_beached");
+  const base = currentModel + '_florida_beached' + _exportSuffix();
+  const blob = buildPointShapefileZip(pts, _getShapefileFields(), base);
   const url = URL.createObjectURL(blob);
-  const a = document.createElement("a"); a.href = url; a.download = currentModel + "_florida_beached_shapefile.zip";
+  const a = document.createElement("a"); a.href = url; a.download = base + '_shapefile.zip';
   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
@@ -1020,7 +1287,7 @@ function downloadGeoJSON() {
   });
   const blob = new Blob([JSON.stringify({ type: "FeatureCollection", features }, null, 2)], { type: "application/geo+json" });
   const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url;
-  a.download = currentModel + "_florida_beached.geojson";
+  a.download = currentModel + '_florida_beached' + _exportSuffix() + '.geojson';
   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
@@ -1030,7 +1297,7 @@ function downloadCSV() {
   const rows = filtered.map(p => keys.map(k => { const v = p[k]; return typeof v === "string" && v.includes(",") ? '"'+v+'"' : (v??''); }).join(","));
   const blob = new Blob([keys.join(",") + "\n" + rows.join("\n")], { type: "text/csv" });
   const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url;
-  a.download = currentModel + "_florida_beached.csv";
+  a.download = currentModel + '_florida_beached' + _exportSuffix() + '.csv';
   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
@@ -1074,7 +1341,7 @@ function buildPointShapefileZip(points, fieldDefs, filename) {
       let crc=0xFFFFFFFF; for(let i=0;i<f.data.length;i++){crc^=f.data[i];for(let j=0;j<8;j++)crc=(crc>>>1)^(crc&1?0xEDB88320:0);} crc^=0xFFFFFFFF;
       dv.setUint32(lo,crc>>>0,true);lo+=4;dv.setUint32(lo,f.data.length,true);lo+=4;dv.setUint32(lo,f.data.length,true);lo+=4;dv.setUint16(lo,nb.length,true);lo+=2;dv.setUint16(lo,0,true);lo+=2;
       bytes.set(nb,lo);lo+=nb.length; bytes.set(f.data,lo);lo+=f.data.length; ce.push({name:nb,offset:es,size:f.data.length,crc:crc>>>0});});
-    const cds=lo; ce.forEach(e=>{dv.setUint32(lo,0x02014b50,true);lo+=4;dv.setUint16(lo,20,true);lo+=2;dv.setUint16(lo,20,true);lo+=2;dv.setUint16(lo,0,true);lo+=2;dv.setUint16(lo,0,true);lo+=2;dv.setUint16(lo,0,true);lo+=2;dv.setUint16(lo,0,true);lo+=2;dv.setUint32(lo,e.crc,true);lo+=4;dv.setUint32(lo,e.size,true);lo+=4;dv.setUint32(lo,e.size,true);lo+=4;dv.setUint16(lo,e.name.length,true);lo+=2;dv.setUint16(lo,0,true);lo+=2;dv.setUint16(lo,0,true);lo+=2;dv.setUint16(lo,0,true);lo+=2;dv.setUint32(lo,0,true);lo+=4;dv.setUint32(lo,e.offset,true);lo+=4;bytes.set(e.name,lo);lo+=e.name.length;});
+    const cds=lo; ce.forEach(e=>{dv.setUint32(lo,0x02014b50,true);lo+=4;dv.setUint16(lo,20,true);lo+=2;dv.setUint16(lo,20,true);lo+=2;dv.setUint16(lo,0,true);lo+=2;dv.setUint16(lo,0,true);lo+=2;dv.setUint16(lo,0,true);lo+=2;dv.setUint16(lo,0,true);lo+=2;dv.setUint32(lo,e.crc,true);lo+=4;dv.setUint32(lo,e.size,true);lo+=4;dv.setUint32(lo,e.size,true);lo+=4;dv.setUint16(lo,e.name.length,true);lo+=2;dv.setUint16(lo,0,true);lo+=2;dv.setUint16(lo,0,true);lo+=2;dv.setUint16(lo,0,true);lo+=2;dv.setUint16(lo,0,true);lo+=2;dv.setUint32(lo,0,true);lo+=4;dv.setUint32(lo,e.offset,true);lo+=4;bytes.set(e.name,lo);lo+=e.name.length;});
     const cdz=lo-cds; dv.setUint32(lo,0x06054b50,true);lo+=4;dv.setUint16(lo,0,true);lo+=2;dv.setUint16(lo,0,true);lo+=2;dv.setUint16(lo,files.length,true);lo+=2;dv.setUint16(lo,files.length,true);lo+=2;dv.setUint32(lo,cdz,true);lo+=4;dv.setUint32(lo,cds,true);lo+=4;dv.setUint16(lo,0,true);lo+=2;
     return new Uint8Array(buf,0,lo);
   }
@@ -1106,19 +1373,136 @@ function init() {
 }
 
 // ── Bootstrap ──────────────────────────────────────────────────────────────
-Promise.all([
-  _loadScript('florida_nesting_zones.js'),
-  _loadScript('florida_mc_data.js'),
-]).then(() => {
-  buildNestingIndex();
-  allParticles = (window._FLORIDA_DATA.mc || {}).particles || [];
-  allParticles.forEach(p => { p.nesting_beach = nearestNestingBeach(p.lat, p.lon); });
-  init();
-  showLoader(false);
-}).catch(err => {
-  console.error(err);
-  document.getElementById('loaderMsg').textContent =
-    'Failed to load data. Make sure florida_mc_data.js and florida_nesting_zones.js are in the same folder as this HTML file.';
+(async function() {
+  try {
+    await _loadScript('florida_nesting_zones.js');
+    await _loadDataset('mc');
+    buildNestingIndex();
+    allParticles = (window._FLORIDA_DATA.mc || {}).particles || [];
+    allParticles.forEach(p => { p.nesting_beach = nearestNestingBeach(p.lat, p.lon); });
+    init();
+    _initDrawerBasemapList();
+    _syncDrawerState();
+    showLoader(false);
+  } catch(err) {
+    console.error(err);
+    document.getElementById('loaderMsg').textContent =
+      'Failed to load data. Make sure florida_mc_data_*.js and florida_nesting_zones.js are in the same folder as this HTML file.';
+  }
+})();
+
+// ── Mobile helpers ─────────────────────────────────────────────────────────
+function _isMobile() { return window.innerWidth <= 768; }
+
+// Build the basemap list inside the drawer (called once after init)
+function _initDrawerBasemapList() {
+  const list = document.getElementById('drawerBasemapList');
+  if (!list || list.children.length) return;
+  Object.entries(BASEMAPS).forEach(([key, bm]) => {
+    const btn = document.createElement('button');
+    btn.className = 'drawer-list-item';
+    btn.dataset.bm = key;
+    btn.textContent = bm.label;
+    btn.classList.toggle('active', key === _currentBasemapKey);
+    btn.onclick = () => { switchBasemap(key); closeMobileMenu(); };
+    list.appendChild(btn);
+  });
+}
+
+// Sync all drawer visual state with current app state
+function _syncDrawerState() {
+  ['mc','det','stoch'].forEach(m => {
+    const el = document.getElementById('drawerModel_' + m);
+    if (el) el.classList.toggle('active', m === currentModel);
+  });
+  const nf = document.getElementById('drawerNestingFilter');
+  if (nf) nf.classList.toggle('warn-active', nestingFilter);
+  document.querySelectorAll('.drawer-basemap-list .drawer-list-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.bm === _currentBasemapKey);
+  });
+}
+
+// Hamburger menu open/close
+function toggleMobileMenu() {
+  const drawer  = document.getElementById('mobileDrawer');
+  const btn     = document.getElementById('mobileMenuBtn');
+  const icon    = document.getElementById('hamburgerIcon');
+  const isOpen  = drawer.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
+  btn.setAttribute('aria-expanded', isOpen);
+  // Swap icon: hamburger ↔ X
+  icon.innerHTML = isOpen
+    ? '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'
+    : '<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>';
+  if (isOpen) _syncDrawerState();
+}
+
+function closeMobileMenu() {
+  const drawer = document.getElementById('mobileDrawer');
+  const btn    = document.getElementById('mobileMenuBtn');
+  const icon   = document.getElementById('hamburgerIcon');
+  drawer.classList.remove('open');
+  btn.classList.remove('open');
+  btn.setAttribute('aria-expanded', 'false');
+  icon.innerHTML = '<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>';
+}
+
+// Drawer action wrappers
+function _drawerSwitchModel(key) { closeMobileMenu(); switchModel(key); }
+function _drawerToggleNesting()  { toggleNestingFilter(); _syncDrawerState(); }
+function _drawerShowChart(type)  { closeMobileMenu(); showChart(type); }
+function _drawerExport(fn)       { closeMobileMenu(); fn(); }
+
+// Panel bottom-sheet open/close
+function openMobilePanel() {
+  const panel = document.getElementById('controlPanel');
+  panel.classList.add('mobile-open');
+  panel.classList.remove('collapsed');
+  document.getElementById('mobilePanelBackdrop').classList.add('visible');
+  document.getElementById('mobilePanelFab').style.display = 'none';
+}
+
+function closeMobilePanel() {
+  document.getElementById('controlPanel').classList.remove('mobile-open');
+  document.getElementById('mobilePanelBackdrop').classList.remove('visible');
+  if (_isMobile()) document.getElementById('mobilePanelFab').style.display = 'flex';
+}
+
+// Panel header click: collapse on desktop, close sheet on mobile
+function _panelHeaderClick() {
+  if (_isMobile()) {
+    closeMobilePanel();
+  } else {
+    document.getElementById('controlPanel').classList.toggle('collapsed');
+  }
+}
+
+// Close drawer when tapping outside it
+document.addEventListener('click', e => {
+  const drawer = document.getElementById('mobileDrawer');
+  const btn    = document.getElementById('mobileMenuBtn');
+  if (drawer.classList.contains('open') && !drawer.contains(e.target) && !btn.contains(e.target)) {
+    closeMobileMenu();
+  }
+});
+
+// Keyboard: ESC closes open overlays
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  closeMobileMenu();
+  closeMobilePanel();
+});
+
+// Resize: clean up mobile state when returning to desktop
+window.addEventListener('resize', () => {
+  if (!_isMobile()) {
+    closeMobileMenu();
+    // Remove mobile-only panel state so desktop layout takes over
+    const panel = document.getElementById('controlPanel');
+    panel.classList.remove('mobile-open');
+    document.getElementById('mobilePanelBackdrop').classList.remove('visible');
+    document.getElementById('mobilePanelFab').style.display = '';
+  }
 });
 </script>
 </body>
