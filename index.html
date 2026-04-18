@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Florida Beaching — Multi-Model</title>
+<title>Wave to Waste | Multi-Model</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌊</text></svg>">
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -493,6 +494,10 @@
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Filtered CSV
       </button>
+      <button class="dropdown-item" onclick="downloadNestingCSV(); closeExportDropdown()">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        All Models Nesting Excel
+      </button>
     </div>
   </div>
 
@@ -571,6 +576,19 @@
 
 <!-- ── Map ──────────────────────────────────────────────────────────────── -->
 <div id="map"></div>
+<div id="anomalyLegend" style="display:none;position:absolute;bottom:36px;left:50%;transform:translateX(-50%);
+  background:var(--bg-panel-alpha);border:1px solid rgba(255,255,255,0.12);border-radius:8px;
+  padding:8px 14px;z-index:900;pointer-events:none;white-space:nowrap;font-size:11px;
+  color:var(--text-primary);backdrop-filter:blur(6px);">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span id="anomalyLegendLabel" style="font-weight:600;margin-right:4px;">Anomaly</span>
+    <span style="display:inline-block;width:60px;height:10px;border-radius:3px;
+      background:linear-gradient(to right,rgba(255,120,30,0.85),rgba(255,120,30,0.1),rgba(40,140,255,0.1),rgba(40,140,255,0.85));"></span>
+    <span style="display:flex;justify-content:space-between;width:120px;font-size:10px;color:var(--text-secondary);">
+      <span id="anomalyLegendLeft">more Det</span><span id="anomalyLegendRight">more MC</span>
+    </span>
+  </div>
+</div>
 
 <!-- ── Particle info panel ──────────────────────────────────────────────── -->
 <div id="particlePanel">
@@ -609,16 +627,34 @@
     <div class="layer-section">
       <div class="layer-section-label">Heatmaps</div>
       <div class="toggle-grid">
-        <label class="toggle-compact"><input type="checkbox" id="togMpwHeat" checked><span class="toggle-track-sm"></span><span class="toggle-compact-label">MPW Heat</span></label>
+        <label class="toggle-compact"><input type="checkbox" id="togMpwHeat"><span class="toggle-track-sm"></span><span class="toggle-compact-label">MPW Heat</span></label>
         <label class="toggle-compact"><input type="checkbox" id="togDensityHeat"><span class="toggle-track-sm"></span><span class="toggle-compact-label">Density Heat</span></label>
       </div>
     </div>
     <div class="layer-section">
       <div class="layer-section-label">Overlays</div>
       <div class="toggle-grid">
-        <label class="toggle-compact"><input type="checkbox" id="togDots"><span class="toggle-track-sm"></span><span class="toggle-compact-label">Endpoints</span></label>
+        <label class="toggle-compact"><input type="checkbox" id="togDots" checked><span class="toggle-track-sm"></span><span class="toggle-compact-label">Endpoints</span></label>
         <label class="toggle-compact" id="trajToggleRow"><input type="checkbox" id="togTrajectories"><span class="toggle-track-sm"></span><span class="toggle-compact-label">Trajectories</span></label>
-        <label class="toggle-compact"><input type="checkbox" id="togNestingZones" checked><span class="toggle-track-sm"></span><span class="toggle-compact-label">Nesting Zones</span></label>
+        <label class="toggle-compact"><input type="checkbox" id="togNestingZones"><span class="toggle-track-sm"></span><span class="toggle-compact-label">Nesting Zones</span></label>
+      </div>
+    </div>
+    <div class="layer-section">
+      <div class="layer-section-label">Anomalies</div>
+      <div style="font-size:10px;color:var(--text-secondary);margin-bottom:6px;line-height:1.4;">
+        Blue&nbsp;=&nbsp;more&nbsp;MC &nbsp;|&nbsp; Orange&nbsp;=&nbsp;more&nbsp;comparison
+      </div>
+      <div class="toggle-grid" style="grid-template-columns:1fr 1fr 1fr;">
+        <label class="toggle-compact"><input type="checkbox" id="togAnomalyMcDet" onchange="toggleAnomaly('mc','det',this.checked)"><span class="toggle-track-sm"></span><span class="toggle-compact-label">MC vs Det</span></label>
+        <label class="toggle-compact"><input type="checkbox" id="togAnomalyMcStoch" onchange="toggleAnomaly('mc','stoch',this.checked)"><span class="toggle-track-sm"></span><span class="toggle-compact-label">MC vs Stoch</span></label>
+        <label class="toggle-compact"><input type="checkbox" id="togAnomalyStochDet" onchange="toggleAnomaly('stoch','det',this.checked)"><span class="toggle-track-sm"></span><span class="toggle-compact-label">Stoch vs Det</span></label>
+      </div>
+      <div style="margin-top:6px;">
+        <label class="toggle-compact" style="display:inline-flex;">
+          <input type="checkbox" id="togAnomalyMpw" onchange="refreshAnomalyLayers()">
+          <span class="toggle-track-sm"></span>
+          <span class="toggle-compact-label" style="font-size:10px;">Use MPW instead of count</span>
+        </label>
       </div>
     </div>
     <div class="slider-group">
@@ -697,6 +733,7 @@ let nestingLayer  = null;
 let nestingPolygons = [];
 
 let mpwHeatLayer = null, densityHeatLayer = null, dotsLayer = null, trajLayer = null;
+let anomalyLayers = { 'mc-det': null, 'mc-stoch': null, 'stoch-det': null };
 const trajSegments = new Map();
 let selectedTrajLine = null;
 let selectedPid = null;
@@ -909,6 +946,7 @@ function toggleNestingFilter() {
   pill.classList.toggle("nz-filter-active", nestingFilter);
   document.getElementById("nestingDot").style.opacity = nestingFilter ? "1" : "0.5";
   rebuildLayers();
+  refreshAnomalyLayers();
 }
 
 // ── Filtering ──────────────────────────────────────────────────────────────
@@ -1002,6 +1040,125 @@ function updateStatsBar(pts) {
 
 // ── Rebuild layers ─────────────────────────────────────────────────────────
 function rebuildLayers() { rebuildHeatmaps(); rebuildDots(); rebuildTrajectories(); updateStatsBar(getFiltered()); }
+
+// ── Anomaly overlays ────────────────────────────────────────────────────────
+const ANOMALY_BIN = 0.1;  // degrees
+
+function _binParticles(particles, useMpw) {
+  const bins = new Map();
+  for (const p of particles) {
+    const latB = Math.floor(p.lat / ANOMALY_BIN) * ANOMALY_BIN;
+    const lonB = Math.floor(p.lon / ANOMALY_BIN) * ANOMALY_BIN;
+    const key  = latB.toFixed(4) + ',' + lonB.toFixed(4);
+    if (!bins.has(key)) bins.set(key, { lat: latB, lon: lonB, val: 0 });
+    bins.get(key).val += useMpw ? (p.mpw || 0) : 1;
+  }
+  return bins;
+}
+
+function _anomalyColor(diff, maxAbs) {
+  const t = Math.min(1, Math.abs(diff) / maxAbs);
+  const alpha = 0.15 + 0.75 * t;
+  // blue = more MC (diff > 0), orange = more comparison model (diff < 0)
+  return diff > 0
+    ? `rgba(40,140,255,${alpha.toFixed(2)})`
+    : `rgba(255,120,30,${alpha.toFixed(2)})`;
+}
+
+async function toggleAnomaly(key1, key2, on) {
+  const layerKey = key1 + '-' + key2;
+  if (!on) {
+    if (anomalyLayers[layerKey]) { map.removeLayer(anomalyLayers[layerKey]); anomalyLayers[layerKey] = null; }
+    _updateAnomalyLegend();
+    return;
+  }
+  showLoader(true, 'Computing anomaly\u2026');
+  try {
+    if (!window._FLORIDA_DATA[key1] || !window._FLORIDA_DATA[key1]._fully_loaded) await _loadDataset(key1);
+    if (!window._FLORIDA_DATA[key2] || !window._FLORIDA_DATA[key2]._fully_loaded) await _loadDataset(key2);
+    anomalyLayers[layerKey] = _buildAnomalyLayer(key1, key2);
+    if (anomalyLayers[layerKey]) anomalyLayers[layerKey].addTo(map);
+    _updateAnomalyLegend();
+  } catch(e) { console.error(e); }
+  showLoader(false);
+}
+
+function _buildAnomalyLayer(key1, key2) {
+  const useMpw = document.getElementById('togAnomalyMpw').checked;
+  let p1 = (window._FLORIDA_DATA[key1] || {}).particles || [];
+  let p2 = (window._FLORIDA_DATA[key2] || {}).particles || [];
+  if (nestingFilter) {
+    p1 = p1.filter(p => pointNearNestingZone(p.lat, p.lon));
+    p2 = p2.filter(p => pointNearNestingZone(p.lat, p.lon));
+  }
+  const b1 = _binParticles(p1, useMpw);
+  const b2 = _binParticles(p2, useMpw);
+
+  const allKeys = new Set([...b1.keys(), ...b2.keys()]);
+  let maxAbs = 0;
+  const diffs = new Map();
+  for (const k of allKeys) {
+    const diff = (b1.has(k) ? b1.get(k).val : 0) - (b2.has(k) ? b2.get(k).val : 0);
+    diffs.set(k, diff);
+    if (Math.abs(diff) > maxAbs) maxAbs = Math.abs(diff);
+  }
+  if (maxAbs === 0) return null;
+
+  const LABELS = { mc: 'MC', det: 'Det', stoch: 'Stoch' };
+  const label1 = LABELS[key1] || key1;
+  const label2 = LABELS[key2] || key2;
+  const metric = useMpw ? 'MPW (tons)' : 'particle count';
+  const rects  = [];
+  for (const [k, diff] of diffs) {
+    if (diff === 0) continue;
+    const [latB, lonB] = k.split(',').map(Number);
+    const color = _anomalyColor(diff, maxAbs);
+    const absVal = Math.abs(diff).toFixed(useMpw ? 3 : 0);
+    const who  = diff > 0 ? `+${absVal} more ${label1}` : `+${absVal} more ${label2}`;
+    rects.push(L.rectangle(
+      [[latB, lonB], [latB + ANOMALY_BIN, lonB + ANOMALY_BIN]],
+      { color: 'none', fillColor: color, fillOpacity: 1, weight: 0 }
+    ).bindTooltip(`<strong>${label1} vs ${label2}</strong><br>${who}<br><em style="font-size:10px">${metric}</em>`,
+      { sticky: true, className: 'leaflet-tooltip' }));
+  }
+  return L.layerGroup(rects);
+}
+
+function refreshAnomalyLayers() {
+  const pairs = [['mc','det'],['mc','stoch'],['stoch','det']];
+  for (const [k1, k2] of pairs) {
+    const key = k1 + '-' + k2;
+    if (anomalyLayers[key]) {
+      map.removeLayer(anomalyLayers[key]);
+      anomalyLayers[key] = _buildAnomalyLayer(k1, k2);
+      if (anomalyLayers[key]) anomalyLayers[key].addTo(map);
+    }
+  }
+  _updateAnomalyLegend();
+}
+
+function _updateAnomalyLegend() {
+  const active = [
+    anomalyLayers['mc-det']    ? 'MC vs Det'   : null,
+    anomalyLayers['mc-stoch']  ? 'MC vs Stoch' : null,
+    anomalyLayers['stoch-det'] ? 'Stoch vs Det': null,
+  ].filter(Boolean);
+  const leg = document.getElementById('anomalyLegend');
+  if (!active.length) { leg.style.display = 'none'; return; }
+  leg.style.display = 'block';
+  document.getElementById('anomalyLegendLabel').textContent = active.join(' | ');
+  // Left label: the "comparison" model (key2 = orange side)
+  const leftParts = [];
+  if (anomalyLayers['mc-det'])    leftParts.push('Det');
+  if (anomalyLayers['mc-stoch'])  leftParts.push('Stoch');
+  if (anomalyLayers['stoch-det']) leftParts.push('Det');
+  document.getElementById('anomalyLegendLeft').textContent  = 'more ' + [...new Set(leftParts)].join('/');
+  // Right label: key1 = blue side
+  const rightParts = [];
+  if (anomalyLayers['mc-det'] || anomalyLayers['mc-stoch']) rightParts.push('MC');
+  if (anomalyLayers['stoch-det']) rightParts.push('Stoch');
+  document.getElementById('anomalyLegendRight').textContent = 'more ' + [...new Set(rightParts)].join('/');
+}
 
 // ── Heatmaps ───────────────────────────────────────────────────────────────
 function rebuildHeatmaps() {
@@ -1535,6 +1692,22 @@ function _triggerNestingDownload() {
   const blob = new Blob([a8], { type: "application/zip" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a"); a.href = url; a.download = "sea_turtle_nesting_zones.zip";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function downloadNestingCSV() {
+  if (window._NESTING_CSV_B64) {
+    _triggerNestingCsvDownload();
+  } else {
+    _loadScript('florida_nesting_csv.js').then(_triggerNestingCsvDownload).catch(e => alert('Could not load nesting CSV: ' + e.message));
+  }
+}
+function _triggerNestingCsvDownload() {
+  const b = atob(window._NESTING_CSV_B64); const a8 = new Uint8Array(b.length);
+  for (let i = 0; i < b.length; i++) a8[i] = b.charCodeAt(i);
+  const blob = new Blob([a8], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = "beaching_nesting_beaches.xlsx";
   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
