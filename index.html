@@ -471,11 +471,11 @@
   </div>
   <div class="navbar-sep"></div>
 
-  <!-- Export dropdown -->
+  <!-- Export Files dropdown -->
   <div class="navbar-dropdown" id="exportDropdown">
     <button class="navbar-btn" id="exportBtn" onclick="toggleExportDropdown(event)">
       <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Export &#x25BE;
+      Export Files &#x25BE;
     </button>
     <div class="dropdown-menu" id="exportMenu">
       <button class="dropdown-item" onclick="downloadShapefile(); closeExportDropdown()">
@@ -490,13 +490,27 @@
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Filtered GeoJSON
       </button>
-      <button class="dropdown-item" onclick="downloadCSV(); closeExportDropdown()">
+    </div>
+  </div>
+
+  <!-- Export CSV dropdown -->
+  <div class="navbar-dropdown" id="exportCsvDropdown">
+    <button class="navbar-btn" id="exportCsvBtn" onclick="toggleExportCsvDropdown(event)">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export CSV &#x25BE;
+    </button>
+    <div class="dropdown-menu" id="exportCsvMenu">
+      <button class="dropdown-item" onclick="downloadCSV(); closeExportCsvDropdown()">
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Filtered CSV
       </button>
-      <button class="dropdown-item" onclick="downloadNestingCSV(); closeExportDropdown()">
+      <button class="dropdown-item" onclick="downloadNestingCSV(); closeExportCsvDropdown()">
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         All Models Nesting Excel
+      </button>
+      <button class="dropdown-item" onclick="downloadDataAllCSV(); closeExportCsvDropdown()">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Beach Summary Excel
       </button>
     </div>
   </div>
@@ -544,7 +558,7 @@
     </div>
 
     <div class="drawer-section">
-      <div class="drawer-label">Export</div>
+      <div class="drawer-label">Export Files</div>
       <div class="drawer-export-list">
         <button class="drawer-list-item" onclick="_drawerExport(downloadShapefile)">
           <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -558,9 +572,23 @@
           <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Filtered GeoJSON
         </button>
+      </div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-label">Export CSV</div>
+      <div class="drawer-export-list">
         <button class="drawer-list-item" onclick="_drawerExport(downloadCSV)">
           <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Filtered CSV
+        </button>
+        <button class="drawer-list-item" onclick="_drawerExport(downloadNestingCSV)">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          All Models Nesting Excel
+        </button>
+        <button class="drawer-list-item" onclick="_drawerExport(downloadDataAllCSV)">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Beach Summary Excel
         </button>
       </div>
     </div>
@@ -794,7 +822,7 @@ function toggleBasemapDropdown(e) {
     menu.style.top  = (rect.bottom + 4) + 'px';
     menu.style.right = (window.innerWidth - rect.right) + 'px';
     menu.style.left = 'auto';
-    closeExportDropdown();
+    closeExportDropdown(); closeExportCsvDropdown();
   }
   btn.classList.toggle('active', open);
 }
@@ -806,6 +834,7 @@ switchBasemap('carto-dark');
 
 document.body.appendChild(document.getElementById('basemapMenu'));
 document.body.appendChild(document.getElementById('exportMenu'));
+document.body.appendChild(document.getElementById('exportCsvMenu'));
 
 // ── Loader UI ──────────────────────────────────────────────────────────────
 function showLoader(visible, msg) {
@@ -1587,7 +1616,7 @@ function downloadChartCSV() {
   a.download = (currentChartType === "count" ? "particle_counts" : "mpw") + "_by_beach" + _exportSuffix() + ".csv"; a.click(); URL.revokeObjectURL(url);
 }
 
-// ── Export dropdown ────────────────────────────────────────────────────────
+// ── Export Files dropdown ──────────────────────────────────────────────────
 function toggleExportDropdown(e) {
   e.stopPropagation();
   const menu = document.getElementById("exportMenu"), btn = document.getElementById("exportBtn");
@@ -1597,7 +1626,7 @@ function toggleExportDropdown(e) {
     menu.style.top   = (rect.bottom + 4) + 'px';
     menu.style.right = (window.innerWidth - rect.right) + 'px';
     menu.style.left  = 'auto';
-    closeBasemapDropdown();
+    closeBasemapDropdown(); closeExportCsvDropdown();
   }
   btn.classList.toggle("active", open);
 }
@@ -1605,12 +1634,33 @@ function closeExportDropdown() {
   document.getElementById("exportMenu").classList.remove("open");
   document.getElementById("exportBtn").classList.remove("active");
 }
+
+// ── Export CSV dropdown ────────────────────────────────────────────────────
+function toggleExportCsvDropdown(e) {
+  e.stopPropagation();
+  const menu = document.getElementById("exportCsvMenu"), btn = document.getElementById("exportCsvBtn");
+  const open = menu.classList.toggle("open");
+  if (open) {
+    const rect = btn.getBoundingClientRect();
+    menu.style.top   = (rect.bottom + 4) + 'px';
+    menu.style.right = (window.innerWidth - rect.right) + 'px';
+    menu.style.left  = 'auto';
+    closeBasemapDropdown(); closeExportDropdown();
+  }
+  btn.classList.toggle("active", open);
+}
+function closeExportCsvDropdown() {
+  document.getElementById("exportCsvMenu").classList.remove("open");
+  document.getElementById("exportCsvBtn").classList.remove("active");
+}
+
 document.addEventListener("click", e => {
   if (!document.getElementById("exportDropdown").contains(e.target)) closeExportDropdown();
+  if (!document.getElementById("exportCsvDropdown").contains(e.target)) closeExportCsvDropdown();
   if (!document.getElementById("basemapDropdown").contains(e.target)) closeBasemapDropdown();
 });
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape") { hideChart(); closeExportDropdown(); closeBasemapDropdown(); }
+  if (e.key === "Escape") { hideChart(); closeExportDropdown(); closeExportCsvDropdown(); closeBasemapDropdown(); }
 });
 
 // ── Downloads ──────────────────────────────────────────────────────────────
@@ -1708,6 +1758,22 @@ function _triggerNestingCsvDownload() {
   const blob = new Blob([a8], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a"); a.href = url; a.download = "beaching_nesting_beaches.xlsx";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function downloadDataAllCSV() {
+  if (window._DATA_ALL_B64) {
+    _triggerDataAllDownload();
+  } else {
+    _loadScript('florida_data_all_csv.js').then(_triggerDataAllDownload).catch(e => alert('Could not load beach summary: ' + e.message));
+  }
+}
+function _triggerDataAllDownload() {
+  const b = atob(window._DATA_ALL_B64); const a8 = new Uint8Array(b.length);
+  for (let i = 0; i < b.length; i++) a8[i] = b.charCodeAt(i);
+  const blob = new Blob([a8], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = "2010 Trials no islands with Nesting Beaches(data_all).xlsx";
   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
