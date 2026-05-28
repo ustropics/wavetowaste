@@ -46,6 +46,8 @@ body{font-family:'DM Sans',sans-serif;background:#0a0f14;color:var(--txt);overfl
 .nsub{font-size:11px;color:var(--txt2);font-family:'JetBrains Mono',monospace}
 .navbtn{padding:6px 10px;border-radius:6px;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;background:rgba(255,193,69,0.08);border:1px solid rgba(255,193,69,0.35);color:var(--warn);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px}
 .navbtn:hover{background:rgba(255,193,69,0.16)}
+.viewbtn{padding:6px 10px;border-radius:6px;font-size:11px;font-weight:700;background:rgba(0,136,122,0.08);border:1px solid rgba(0,136,122,0.35);color:var(--ac);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px}
+.viewbtn:hover{background:rgba(0,136,122,0.18)}
 #map{position:absolute;top:var(--nh);left:0;right:0;bottom:0;z-index:1}
 .panel{position:absolute;top:calc(var(--nh) + 16px);left:16px;z-index:1000;background:var(--bg-a);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.06);border-radius:12px;width:296px;box-shadow:var(--sh);overflow:hidden;max-height:calc(100vh - var(--nh) - 32px);overflow-y:auto}
 .panel.collapsed .pbody{display:none}
@@ -125,6 +127,11 @@ body{font-family:'DM Sans',sans-serif;background:#0a0f14;color:var(--txt);overfl
   <span class="brand">Wave to Waste</span>
   <div class="sep"></div>
   <span class="nsub">Inter-Nesting Zones &nbsp;·&nbsp; 8–16 km offshore</span>
+  <div class="sep"></div>
+  <button class="viewbtn" onclick="switchToBeached()" title="Switch to Beached Map">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12c1.5-2 3-3 5-3s3.5 3 5 3 3.5-3 5-3 3.5 1 5 3"/><path d="M2 17c1.5-2 3-3 5-3s3.5 3 5 3 3.5-3 5-3 3.5 1 5 3"/></svg>
+    Beached Map
+  </button>
   <div class="sep"></div>
   <button class="navbtn" onclick="openChart()">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="12" width="4" height="9"></rect><rect x="10" y="7" width="4" height="14"></rect><rect x="17" y="3" width="4" height="18"></rect></svg>
@@ -540,6 +547,14 @@ function setChartMetric(metric) {
   renderChart();
 }
 
+function switchToBeached() {
+  if (window.parent !== window) {
+    window.parent.postMessage({action: 'toggleView'}, '*');
+  } else {
+    window.location.href = 'combined_florida_beached_map.html';
+  }
+}
+
 function openChart() {
   document.getElementById('chartModal').classList.add('visible');
   renderChart();
@@ -652,23 +667,65 @@ function renderChart() {
 }
 
 function downloadChartCSV() {
-  const rows = chartView === 'zones' ? getZoneChartRows() : getMonthlyChartRows();
-  if(rows.length===0) return;
   const isMpw = chartMetric === 'mpw';
-  const header = chartView === 'zones'
-    ? (isMpw
-      ? ['beach','county','filtered_mpw_tons','filtered_transits','particles_per_day','all_month_mpw_tons']
-      : ['beach','county','filtered_transits','particles_per_day','all_month_total'])
-    : (isMpw
+  let header, dataRows, filename;
+
+  if (chartView === 'zones') {
+    const rows = getZoneChartRows();
+    if (rows.length === 0) return;
+    const years = activeYears();
+    const months = activeMonths();
+    const propsMap = {};
+    DATA.features.forEach(f => { propsMap[f.properties.beach] = f.properties; });
+
+    const ymHeaders = [];
+    for (const y of years) for (const m of months) ymHeaders.push(`${MONTHS[m-1].slice(0,3)} ${y}`);
+    const mTotalHeaders = months.map(m => `${MONTHS[m-1].slice(0,3)} total`);
+    const yTotalHeaders = years.map(y => `${y} total`);
+
+    header = isMpw
+      ? ['beach','county','filtered_mpw_tons','filtered_transits','particles_per_day',...ymHeaders,...mTotalHeaders,...yTotalHeaders]
+      : ['beach','county','filtered_transits','particles_per_day',...ymHeaders,...mTotalHeaders,...yTotalHeaders];
+
+    dataRows = rows.map(r => {
+      const props = propsMap[r.beach] || {};
+      const ymVals = [];
+      for (const y of years) {
+        for (const m of months) {
+          const v = isMpw
+            ? ((props.year_month_mpw?.[String(y)]?.[String(m)]) || 0)
+            : ((props.year_month?.[String(y)]?.[String(m)]) || 0);
+          ymVals.push(isMpw ? v.toFixed(6) : v);
+        }
+      }
+      const mTotals = months.map(m => {
+        let t = 0;
+        for (const y of years) t += isMpw ? ((props.year_month_mpw?.[String(y)]?.[String(m)]) || 0) : ((props.year_month?.[String(y)]?.[String(m)]) || 0);
+        return isMpw ? t.toFixed(6) : t;
+      });
+      const yTotals = years.map(y => {
+        let t = 0;
+        for (const m of months) t += isMpw ? ((props.year_month_mpw?.[String(y)]?.[String(m)]) || 0) : ((props.year_month?.[String(y)]?.[String(m)]) || 0);
+        return isMpw ? t.toFixed(6) : t;
+      });
+      return isMpw
+        ? [r.beach, r.county, r.mpw.toFixed(6), r.count, r.ppd.toFixed(4), ...ymVals, ...mTotals, ...yTotals]
+        : [r.beach, r.county, r.count, r.ppd.toFixed(4), ...ymVals, ...mTotals, ...yTotals];
+    });
+    filename = isMpw ? 'internesting_zone_mpw.csv' : 'internesting_zone_transits.csv';
+
+  } else {
+    const rows = getMonthlyChartRows();
+    if (rows.length === 0) return;
+    header = isMpw
       ? ['month','filtered_mpw_tons','filtered_transits','particles_per_day']
-      : ['month','filtered_transits','particles_per_day']);
-  const dataRows = chartView === 'zones'
-    ? (isMpw
-      ? rows.map(r=>[r.beach,r.county,r.mpw.toFixed(6),r.count,r.ppd.toFixed(4),r.totalMpw.toFixed(6)])
-      : rows.map(r=>[r.beach,r.county,r.count,r.ppd.toFixed(4),r.total]))
-    : (isMpw
+      : ['month','filtered_transits','particles_per_day'];
+    dataRows = isMpw
       ? rows.map(r=>[r.label,r.mpw.toFixed(6),r.count,r.ppd.toFixed(4)])
-      : rows.map(r=>[r.label,r.count,r.ppd.toFixed(4)]));
+      : rows.map(r=>[r.label,r.count,r.ppd.toFixed(4)]);
+    filename = isMpw ? 'internesting_monthly_mpw.csv' : 'internesting_monthly_transits.csv';
+  }
+
   const csv=[header]
     .concat(dataRows)
     .map(row=>row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','))
@@ -677,9 +734,7 @@ function downloadChartCSV() {
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
   a.href=url;
-  a.download=chartView === 'zones'
-    ? (isMpw ? 'internesting_zone_mpw.csv' : 'internesting_zone_transits.csv')
-    : (isMpw ? 'internesting_monthly_mpw.csv' : 'internesting_monthly_transits.csv');
+  a.download=filename;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
