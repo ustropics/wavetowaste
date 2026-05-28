@@ -70,8 +70,12 @@ body{font-family:'DM Sans',sans-serif;background:#0a0f14;color:var(--txt);overfl
 .stats{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:5px}
 .srow{display:flex;justify-content:space-between;font-size:12px}
 .sk{color:var(--txt2)}.sv{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--txt)}
-.ltog{display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;user-select:none}
-.ltog input{accent-color:var(--ac)}
+.ltog{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;cursor:pointer;user-select:none}
+.ltog input[type=checkbox]{display:none}
+.ltog .sw-track{position:relative;width:32px;height:18px;border-radius:9px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.15);transition:background .2s,border-color .2s;flex-shrink:0}
+.ltog input[type=checkbox]:checked+.sw-track{background:var(--ac);border-color:var(--ac)}
+.ltog .sw-track::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,0.4)}
+.ltog input[type=checkbox]:checked+.sw-track::after{transform:translateX(14px)}
 .dbtn{width:100%;padding:9px;border-radius:7px;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.2s;background:rgba(0, 136, 122,0.1);border:1px solid rgba(0, 136, 122,0.3);color:var(--ac);display:flex;align-items:center;justify-content:center;gap:6px}
 .dbtn:hover{background:rgba(0, 136, 122,0.2)}
 .dbtn.alt{background:rgba(255,193,69,0.08);border-color:rgba(255,193,69,0.3);color:var(--warn)}
@@ -119,6 +123,34 @@ body{font-family:'DM Sans',sans-serif;background:#0a0f14;color:var(--txt);overfl
   .chart-body{min-height:260px}
   #chartCanvasWrap{min-height:260px}
 }
+/* ── GMU zones ───────────────────────────────────── */
+#gmuLegend{display:none;flex-wrap:wrap;gap:4px;margin-top:6px;padding:0 2px}
+.gmu-swatch{font-size:10px;font-weight:700;color:#fff;padding:2px 6px;border-radius:4px;letter-spacing:.3px;cursor:pointer}
+.nz-popup{font-family:'DM Sans',sans-serif;font-size:12px;line-height:1.6}
+.nz-popup-title{font-size:13px;font-weight:700;color:var(--warn);margin-bottom:4px}
+.nz-popup strong{color:var(--warn);font-weight:600}
+.nz-tooltip{font-family:'DM Sans',sans-serif;font-size:12px;line-height:1.5;background:#0f1923 !important;border:1px solid rgba(255,255,255,0.1) !important;color:var(--txt) !important;box-shadow:var(--sh) !important}
+.nz-tooltip strong{color:var(--warn)}
+#gmuPanel{position:fixed;top:calc(var(--nh) + 16px);right:16px;z-index:1500;width:300px;max-height:calc(100vh - var(--nh) - 32px);background:var(--bg-a);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08);border-radius:12px;box-shadow:var(--sh);transform:translateX(calc(100% + 32px));transition:transform .3s cubic-bezier(.32,0,.68,1);pointer-events:none;display:flex;flex-direction:column}
+#gmuPanel.visible{transform:translateX(0);pointer-events:auto}
+#gmuPanelHeader{padding:10px 12px;border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+#gmuPanelTitle{font-size:13px;font-weight:700;color:#fff;letter-spacing:.3px}
+#gmuPanelBody{padding:12px 14px 14px;overflow-y:auto;flex:1}
+#gmuPanelStats{display:flex;gap:12px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.07)}
+.gmu-stat{display:flex;flex-direction:column;gap:2px}
+.gmu-stat-val{font-size:14px;font-weight:700;color:var(--txt)}
+.gmu-stat-lbl{font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:.4px}
+.gmu-pnl-close{width:24px;height:24px;border-radius:5px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.gmu-pnl-close:hover{background:rgba(255,107,107,0.15);color:#ff6b6b;border-color:rgba(255,107,107,0.3)}
+#gmuBeachTable{width:100%;border-collapse:collapse;font-size:11px}
+#gmuBeachTable th{text-align:left;color:var(--txt2);font-weight:600;padding:3px 4px 5px;border-bottom:1px solid rgba(255,255,255,0.08);font-size:10px;text-transform:uppercase;letter-spacing:.4px;cursor:pointer;user-select:none;white-space:nowrap}
+#gmuBeachTable th:hover{color:var(--txt)}
+#gmuBeachTable th.sort-active{color:var(--ac)}
+#gmuBeachTable th .sort-arrow{margin-left:3px;opacity:.5;font-style:normal}
+#gmuBeachTable th.sort-active .sort-arrow{opacity:1;color:var(--ac)}
+#gmuBeachTable td{padding:4px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--txt);vertical-align:middle}
+#gmuBeachTable tr:last-child td{border-bottom:none}
+#gmuBeachTable tr:hover td{background:rgba(255,255,255,0.03)}
 </style>
 </head>
 <body>
@@ -136,6 +168,11 @@ body{font-family:'DM Sans',sans-serif;background:#0a0f14;color:var(--txt);overfl
   <button class="navbtn" onclick="openChart()">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="12" width="4" height="9"></rect><rect x="10" y="7" width="4" height="14"></rect><rect x="17" y="3" width="4" height="18"></rect></svg>
     Open Transit Chart
+  </button>
+  <div class="sep"></div>
+  <button class="viewbtn" onclick="downloadChartCSV()">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Download CSV
   </button>
 </div>
 <div id="map"></div>
@@ -161,7 +198,17 @@ body{font-family:'DM Sans',sans-serif;background:#0a0f14;color:var(--txt);overfl
     </div>
     <div>
       <div class="slbl">Layers</div>
-      <label class="ltog"><input type="checkbox" id="togZones" checked onchange="rebuildLayer()"> Show zone fills</label>
+      <label class="ltog">Show zone fills<input type="checkbox" id="togZones" checked onchange="rebuildLayer()"><span class="sw-track"></span></label>
+      <label class="ltog" style="margin-top:5px">GMU Zones<input type="checkbox" id="togGmuZones" onchange="renderGmuZones()"><span class="sw-track"></span></label>
+      <div id="gmuLegend">
+        <span class="gmu-swatch" style="background:#e74c3c" onclick="openGmuPanel('NW')" title="North Western Gulf">NW</span>
+        <span class="gmu-swatch" style="background:#e67e22" onclick="openGmuPanel('NO')" title="North Atlantic">NO</span>
+        <span class="gmu-swatch" style="background:#f1c40f;color:#222" onclick="openGmuPanel('CE')" title="Central Atlantic">CE</span>
+        <span class="gmu-swatch" style="background:#2ecc71;color:#222" onclick="openGmuPanel('CW')" title="Central Western Gulf">CW</span>
+        <span class="gmu-swatch" style="background:#3498db" onclick="openGmuPanel('DT')" title="Dry Tortugas">DT</span>
+        <span class="gmu-swatch" style="background:#9b59b6" onclick="openGmuPanel('SE')" title="South Eastern Atlantic">SE</span>
+        <span class="gmu-swatch" style="background:#e91e8c" onclick="openGmuPanel('SW')" title="South Western Gulf">SW</span>
+      </div>
     </div>
     <div class="stats">
       <div class="srow"><span class="sk">Active filter</span><span class="sv" id="sFilter">All months</span></div>
@@ -176,6 +223,25 @@ body{font-family:'DM Sans',sans-serif;background:#0a0f14;color:var(--txt);overfl
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Download Filtered Shapefile
     </button>
+  </div>
+</div>
+<div id="gmuPanel">
+  <div id="gmuPanelHeader">
+    <span id="gmuPanelTitle">GMU</span>
+    <button class="gmu-pnl-close" onclick="closeGmuPanel()" title="Close">&#x2715;</button>
+  </div>
+  <div id="gmuPanelBody">
+    <div id="gmuPanelStats"></div>
+    <table id="gmuBeachTable">
+      <thead>
+        <tr>
+          <th id="gmuThBeach" onclick="sortGmuTable('beach')">Beach<em class="sort-arrow">▲</em></th>
+          <th id="gmuThCount" style="text-align:right" onclick="sortGmuTable('count')">Transits<em class="sort-arrow">↕</em></th>
+          <th id="gmuThMpw"   style="text-align:right" onclick="sortGmuTable('mpw')">MPW (t)<em class="sort-arrow">↕</em></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </div>
 </div>
 <div id="chartModal">
@@ -684,11 +750,13 @@ function downloadChartCSV() {
     const yTotalHeaders = years.map(y => `${y} total`);
 
     header = isMpw
-      ? ['beach','county','filtered_mpw_tons','filtered_transits','particles_per_day',...ymHeaders,...mTotalHeaders,...yTotalHeaders]
-      : ['beach','county','filtered_transits','particles_per_day',...ymHeaders,...mTotalHeaders,...yTotalHeaders];
+      ? ['beach','county','gmu','gmu_name','filtered_mpw_tons','filtered_transits','particles_per_day',...ymHeaders,...mTotalHeaders,...yTotalHeaders]
+      : ['beach','county','gmu','gmu_name','filtered_transits','particles_per_day',...ymHeaders,...mTotalHeaders,...yTotalHeaders];
 
     dataRows = rows.map(r => {
       const props = propsMap[r.beach] || {};
+      const gmu     = GMU_LOOKUP[r.beach] || '';
+      const gmuName = gmu ? (GMU_NAMES[gmu] || gmu) : '';
       const ymVals = [];
       for (const y of years) {
         for (const m of months) {
@@ -709,8 +777,8 @@ function downloadChartCSV() {
         return isMpw ? t.toFixed(6) : t;
       });
       return isMpw
-        ? [r.beach, r.county, r.mpw.toFixed(6), r.count, r.ppd.toFixed(4), ...ymVals, ...mTotals, ...yTotals]
-        : [r.beach, r.county, r.count, r.ppd.toFixed(4), ...ymVals, ...mTotals, ...yTotals];
+        ? [r.beach, r.county, gmu, gmuName, r.mpw.toFixed(6), r.count, r.ppd.toFixed(4), ...ymVals, ...mTotals, ...yTotals]
+        : [r.beach, r.county, gmu, gmuName, r.count, r.ppd.toFixed(4), ...ymVals, ...mTotals, ...yTotals];
     });
     filename = isMpw ? 'internesting_zone_mpw.csv' : 'internesting_zone_transits.csv';
 
@@ -850,8 +918,141 @@ rebuildLayer();
 updateStats();
 document.getElementById('loader').classList.add('hidden');
 document.addEventListener('keydown', (event) => {
-  if(event.key === 'Escape') closeChart();
+  if(event.key === 'Escape') { closeChart(); closeGmuPanel(); }
 });
+
+// ── GMU Zones ────────────────────────────────────────────────────────────
+const GMU_COLORS = { NW:'#e74c3c', NO:'#e67e22', CE:'#f1c40f', CW:'#2ecc71', DT:'#3498db', SE:'#9b59b6', SW:'#e91e8c' };
+const GMU_NAMES  = { NW:'North Western Gulf', CW:'Central Western Gulf', SW:'South Western Gulf', NO:'North Atlantic', CE:'Central Atlantic', SE:'South Eastern Atlantic', DT:'Dry Tortugas' };
+const GMU_LOOKUP = {"Alligator Point":"NW","Amelia Island":"NO","Amelia Island State Park":"NO","Anastasia State Park":"NO","Anclote Key State Park":"CW","Anna Maria Island":"CW","Avalon State Park":"CE","Bahia Honda State Park":"SE","Bald Point State Park":"NW","Barefoot Beach Preserve":"SW","Beach Club Drive (North)":"NO","Beach Club Drive (South)":"NO","Big Hickory Island":"SW","Big Pine Key":"SE","Biscayne National Park":"SE","Boca Chica Key":"SE","Boca Grande Key":"DT","Boca Raton Beaches":"SE","Bonita Beach":"SW","Breakers":"SE","Bunche Beach":"SW","Cabbage/Shell Key":"CW","Caladesi Island State Park":"CW","Camp Helen State Park":"NW","Canaveral Air Force Station":"CE","Canaveral National Seashore":"CE","Canaveral National Seashore (Volusia County)":"CE","Cape Florida State Park":"SE","Cape Romano":"SW","Cape San Blas":"NW","Cape San Blas (AFB)":"NW","Cape St. George":"NW","Captiva Island":"CW","Carrabelle":"NW","Casey Key":"CW","Cayo Costa State Park":"CW","Central Brevard County":"CE","Clam Pass Park":"SW","Clarence Higgs Beach (Key West)":"SE","Cocoa Beach":"CE","Coral Cove Park":"SE","Deer Lake State Park":"NW","Deerfield/Hillsboro Beach":"SE","Delray Beach":"SE","Dog Island":"NW","Don Pedro Island":"CW","Don Pedro State Park":"CW","Dry Tortugas - Bush Key":"DT","Dry Tortugas - East Key":"DT","Dry Tortugas - Garden Key":"DT","Dry Tortugas - Loggerhead Key":"DT","Dry Tortugas - Long Key":"DT","Dry Tortugas - Middle Key":"DT","ENP - Cape Sable (North)":"SW","ENP - Cape Sable (South)":"SW","East (Okaloosa) County Beaches":"NW","East (Walton) County Beaches":"NW","Eglin Air Force Base (Okaloosa - East)":"NW","Eglin Air Force Base (Okaloosa - West)":"NW","Eglin Air Force Base (Santa Rosa County)":"NW","Egmont Key":"CW","Estero Island":"SW","Fat Deer Key":"SE","Fisher Island":"SE","Flagler Beach":"NO","Flagler Beach SP":"NO","Fort Clinch":"NO","Fort Desoto County Park":"CW","Fort Lauderdale Beach":"SE","Fort Matanzas (North)":"NO","Fort Matanzas (South)":"NO","Fort Pierce Inlet State Park":"CE","Fort Zachary Taylor State Park":"SE","Gasparilla Island North (Charlotte County)":"CW","Gasparilla Island South (Lee County)":"CW","Gasparilla Island State Park":"CW","Golden Beach":"SE","Grayton Beach State Park":"NW","Guana River (South)":"NO","Guana Tolomato Matanzas NERR":"NO","Gulf Islands National Seashore (Fort Pickens)":"NW","Gulf Islands National Seashore (Perdido Key)":"NW","Gulf Islands National Seashore (Santa Rosa Island)":"NW","Gulfstream":"SE","Gulfstream Park":"SE","Hanna Park":"NO","Henderson Beach State Park":"NW","Highland Beach":"SE","Hobe Sound NWR":"SE","Hollywood/Hallendale Beach":"SE","Honeymoon Island State Park":"CW","Huguenot Park":"NO","Hutchinson Island":"SE","Hutchinson Island (St. Lucie County)":"SE","Indian River Shores":"CE","Indian River Shores (North)":"CE","Jetty Park":"CE","John D. MacArthur Beach State Park":"SE","John U. Lloyd State Park":"SE","Jupiter Beach (including Carlin)":"SE","Jupiter Inlet Colony":"SE","Jupiter Island":"SE","Jupiter/Juno Beach":"SE","Keewaydin Island (North)":"SW","Keewaydin Island (South)":"SW","Key Biscayne":"SE","Key Colony Beach":"SE","Kreusler Park":"SE","Lake Worth Inlet":"SE","Lake Worth Municipal Beach":"SE","Lantana":"SE","Lido Key":"CW","Little Crawl Key":"SE","Little Gasparilla Island":"CW","Little Talbot Island State Park":"NO","Long Key (West End)":"SE","Long Key State Park":"SE","Longboat Key (North)":"CW","Longboat Key (South)":"CW","Lovers Key State Park":"SW","Lower Matecumbe Sea Oats Bch":"SE","Manalapan":"SE","Manasota Key":"CW","Manasota Key (Sarasota County)":"CW","Marco Island":"SW","Marineland Beach":"NO","Marquesas Keys":"DT","Mayport Naval Air Station":"NO","Merritt Island National Wildlife Refuge":"CE","Mexico Beach":"NW","Miami Beaches":"SE","Mid (Okaloosa) County Beaches":"NW","Mid County Beaches":"CW","Middle (Walton) County Beaches":"NW","Miramar Beach":"NW","Naples Beach":"SW","Nature Preserve Beach (Key West)":"SE","Navarre Beach":"NW","New Smyrna Beach":"CE","North Captiva":"CW","North Captiva Island (South)":"CW","North Captiva Island State Park":"CW","North County Beaches":"CW","North Flagler County Beaches":"NO","North Peninsula State Park":"NO","North Saint Lucie County Beaches":"CE","Ocean Inlet Park":"SE","Ocean Reef Park":"SE","Ocean Ridge (Boynton)":"SE","Old Ponte Vedra":"NO","Palm Beach (North End)":"SE","Palm Beach (South End)":"SE","Palm Beach Shores":"SE","Panama City Beach":"NW","Par III to Kreusler":"SE","Parkshore Beach":"SW","Patio Beach":"SE","Patrick Air Force Base":"CE","Pensacola Beach":"NW","Perdido Key":"NW","Perdido Key State Park":"NW","Phipps Preserve Beach":"NW","Pompano/Lauderdale by-the-sea":"SE","Ponte Vedra (North)":"NO","Ponte Vedra (South)":"NO","Residential Beach":"SE","Rest Beach (Key West)":"SE","S Duval County Beaches":"NO","Saint Andrews State Park":"NW","Saint Augustine Beach":"NO","Saint Pete Beach":"CW","Sanibel Island (East)":"CW","Sanibel Island (West)":"CW","Sea Oat Island":"SW","Sebastian Inlet State Park (Brevard County)":"CE","Sebastian Inlet State Park (Indian River County)":"CE","Siesta Key":"CW","Siesta Key (South)":"CW","Singer Island North":"SE","Singer Island South":"SE","Sloans Curve":"SE","Smathers Beach (Key West)":"SE","Sombrero Beach":"SE","South Brevard County":"CE","South Cocoa Beach":"CE","South Flagler County Beaches":"NO","South Indian River County Beaches":"CE","South Palm Beach":"SE","St. George Island":"NW","St. George Island SP":"NW","St. Joe Beach":"NW","St. Joseph Peninsula":"NW","St. Joseph Peninsula State Park":"NW","St. Lucie Inlet State Park":"SE","St. Vincent National Wildlife Refuge":"NW","Stump Pass State Park":"CW","Ten Thousand Islands National Wildlife Refuge":"SW","Tequesta Beaches":"SE","Topsail Hill State Park":"NW","Town of Palm Beach (Midtown)":"SE","Tyndall Air Force Base":"NW","Upper Matecumbe Key":"SE","Vanderbilt Beach":"SW","Venice Beaches":"CW","Vero Beach":"CE","Vilano Beach":"NO","Virginia Key":"SE","Volusia County Beaches (North)":"NO","Volusia County Beaches (South)":"NO","Wabasso Beach":"CE","Wabasso Beach (South)":"CE","Washington Oaks":"NO","West (Okaloosa) County Beaches":"NW","West (Walton) County Beaches":"NW","Wiggins Pass":"SW","Woman Key":"DT"};
+
+let gmuLayer     = null;
+let gmuSort      = { col: 'beach', dir: 'asc' };
+let gmuTableData = null;
+
+function renderGmuZones() {
+  if (gmuLayer) { map.removeLayer(gmuLayer); gmuLayer = null; }
+  const toggle = document.getElementById('togGmuZones');
+  if (!toggle || !toggle.checked) {
+    document.getElementById('gmuLegend').style.display = 'none';
+    return;
+  }
+  gmuLayer = L.geoJSON(DATA, {
+    style(feature) {
+      const gmu = GMU_LOOKUP[feature.properties.beach];
+      return { color: GMU_COLORS[gmu] || '#aaaaaa', weight: 2.5, opacity: 0.85, dashArray: '4 3', fillOpacity: 0 };
+    },
+    onEachFeature(feature, layer) {
+      const p = feature.properties;
+      const gmu = GMU_LOOKUP[p.beach];
+      const count = getCount(p);
+      const ppd   = getPpd(p);
+      const infoHTML =
+        '<div class="nz-popup"><div class="nz-popup-title">🐢 ' + (p.beach || 'Nesting Beach') + '</div>' +
+        (gmu ? '<strong>GMU:</strong> ' + (GMU_NAMES[gmu] || gmu) + ' (' + gmu + ')<br>' : '') +
+        '<strong>County:</strong> ' + (p.county || '—') + '<br>' +
+        '<strong>Transits:</strong> ' + count.toLocaleString() + '<br>' +
+        '<strong>Particles/day:</strong> ' + ppd.toFixed(2) + '<br>' +
+        '</div>';
+      layer.bindTooltip(infoHTML, { sticky: true, className: 'leaflet-tooltip nz-tooltip' });
+      layer.bindPopup(infoHTML, { maxWidth: 300 });
+      layer.on('click', () => { if (gmu) openGmuPanel(gmu); });
+      layer.on('mouseover', () => layer.setStyle({ weight: 4, opacity: 1 }));
+      layer.on('mouseout',  () => layer.setStyle({ color: GMU_COLORS[gmu] || '#aaaaaa', weight: 2.5, opacity: 0.85, dashArray: '4 3' }));
+    }
+  }).addTo(map);
+  document.getElementById('gmuLegend').style.display = 'flex';
+}
+
+function openGmuPanel(gmuCode) {
+  const color = GMU_COLORS[gmuCode] || '#aaaaaa';
+  const gmuBeaches = Object.keys(GMU_LOOKUP).filter(n => GMU_LOOKUP[n] === gmuCode).sort();
+  const beachSet   = new Set(gmuBeaches);
+
+  const beachStats = new Map();
+  let totalCount = 0, totalMpw = 0;
+  DATA.features.forEach(f => {
+    const p = f.properties;
+    if (!beachSet.has(p.beach)) return;
+    const count = getCount(p);
+    const mpw   = getMpw(p);
+    beachStats.set(p.beach, { count, mpw });
+    totalCount += count;
+    totalMpw   += mpw;
+  });
+
+  const n      = gmuBeaches.length;
+  const avgPts = n > 0 ? (totalCount / n) : 0;
+  const avgMpw = n > 0 ? (totalMpw   / n) : 0;
+
+  document.getElementById('gmuPanelHeader').style.background = color;
+  document.getElementById('gmuPanelTitle').textContent = (GMU_NAMES[gmuCode] || gmuCode) + ' (' + gmuCode + ')';
+  document.getElementById('gmuPanelStats').innerHTML =
+    '<div class="gmu-stat"><span class="gmu-stat-val">' + totalCount.toLocaleString() + ' <span style="font-size:10px;font-weight:400;color:var(--txt2)">(' + avgPts.toFixed(1) + ' avg)</span></span><span class="gmu-stat-lbl">Transits</span></div>' +
+    '<div class="gmu-stat"><span class="gmu-stat-val">' + totalMpw.toFixed(2) + ' <span style="font-size:10px;font-weight:400;color:var(--txt2)">(' + avgMpw.toFixed(2) + ' avg)</span></span><span class="gmu-stat-lbl">MPW (tons)</span></div>' +
+    '<div class="gmu-stat"><span class="gmu-stat-val">' + n + '</span><span class="gmu-stat-lbl">Beaches</span></div>';
+
+  gmuTableData = { beaches: gmuBeaches, stats: beachStats };
+  gmuSort = { col: 'beach', dir: 'asc' };
+  renderGmuTableBody();
+  document.getElementById('gmuPanel').classList.add('visible');
+}
+
+function closeGmuPanel() {
+  document.getElementById('gmuPanel').classList.remove('visible');
+}
+
+function renderGmuTableBody() {
+  if (!gmuTableData) return;
+  const { beaches, stats } = gmuTableData;
+  const { col, dir } = gmuSort;
+
+  const rows = beaches.map(name => ({ name, ...(stats.get(name) || { count: 0, mpw: 0 }) }));
+  rows.sort((a, b) => {
+    const v = col === 'beach' ? a.name.localeCompare(b.name) : col === 'count' ? a.count - b.count : a.mpw - b.mpw;
+    return dir === 'asc' ? v : -v;
+  });
+
+  const colMap = { beach: 'gmuThBeach', count: 'gmuThCount', mpw: 'gmuThMpw' };
+  Object.entries(colMap).forEach(([c, id]) => {
+    const th = document.getElementById(id);
+    th.classList.toggle('sort-active', c === col);
+    th.querySelector('.sort-arrow').textContent = c === col ? (dir === 'asc' ? '▲' : '▼') : '↕';
+  });
+
+  const tbody = document.querySelector('#gmuBeachTable tbody');
+  tbody.innerHTML = '';
+  rows.forEach(({ name, count, mpw }) => {
+    const tr = document.createElement('tr');
+    tr.style.cursor = 'pointer';
+    tr.title = 'Zoom to ' + name;
+    tr.innerHTML = '<td>' + name + '</td>' +
+      '<td style="text-align:right;color:var(--txt2)">' + count.toLocaleString() + '</td>' +
+      '<td style="text-align:right;color:var(--txt2)">' + (mpw > 0 ? mpw.toFixed(2) : '—') + '</td>';
+    tr.onclick = () => selectNestingBeach(name);
+    tbody.appendChild(tr);
+  });
+}
+
+function sortGmuTable(col) {
+  if (gmuSort.col === col) {
+    gmuSort.dir = gmuSort.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    gmuSort.col = col;
+    gmuSort.dir = col === 'beach' ? 'asc' : 'desc';
+  }
+  renderGmuTableBody();
+}
+
+function selectNestingBeach(beachName) {
+  if (!gmuLayer) return;
+  gmuLayer.eachLayer(layer => {
+    if (layer.feature && layer.feature.properties.beach === beachName) {
+      map.fitBounds(layer.getBounds(), { padding: [60, 60], maxZoom: 14 });
+      layer.openPopup();
+    }
+  });
+}
 </script>
 </body>
 </html>
