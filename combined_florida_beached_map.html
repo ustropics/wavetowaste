@@ -546,13 +546,12 @@
   <button class="navbar-btn model-btn" id="btnModelDet" onclick="switchModel('det')">Deterministic</button>
   <button class="navbar-btn model-btn" id="btnModelStoch" onclick="switchModel('stoch')">Stochastic</button>
   <div class="navbar-sep"></div>
+
+  <!-- Nesting filter -->
   <button class="navbar-btn" id="btnViewInternesting" onclick="switchToInternesting()" title="Switch to Inter-Nesting Zones">
     <svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="4" ry="3"/><path d="M7 9c-2-1.5-4.5-1-5 1.5s1 3.5 3 3.5"/><path d="M17 9c2-1.5 4.5-1 5 1.5s-1 3.5-3 3.5"/><path d="M9 15c-.5 1.5-1 3-2.5 3.5"/><path d="M15 15c.5 1.5 1 3 2.5 3.5"/><ellipse cx="12" cy="8" rx="2" ry="1.5"/></svg>
     Inter-Nesting
   </button>
-  <div class="navbar-sep"></div>
-
-  <!-- Nesting filter -->
   <button class="navbar-btn" id="nestingFilterPill" onclick="toggleNestingFilter()">
     <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ffc145;opacity:0.5;flex-shrink:0;transition:opacity 0.2s;" id="nestingDot"></span>
     Nesting Only
@@ -620,6 +619,10 @@
       <button class="dropdown-item" onclick="downloadDataAllCSV(); closeExportCsvDropdown()">
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Master Data CSV
+      </button>
+      <button class="dropdown-item" onclick="downloadGmuCSV(); closeExportCsvDropdown()">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        GMU Data CSV
       </button>
     </div>
   </div>
@@ -710,6 +713,10 @@
         <button class="drawer-list-item" onclick="_drawerExport(downloadDataAllCSV)">
           <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Master Data CSV
+        </button>
+        <button class="drawer-list-item" onclick="_drawerExport(downloadGmuCSV)">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          GMU Data CSV
         </button>
       </div>
     </div>
@@ -2325,6 +2332,57 @@ function _triggerDataAllDownload() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a"); a.href = url; a.download = "2010 Trials no islands with Nesting Beaches(data_all).xlsx";
   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function downloadGmuCSV() {
+  const filtered = getFiltered();
+  const MODEL_LABELS = { mc: 'Monte Carlo', det: 'Deterministic', stoch: 'Stochastic' };
+
+  // Aggregate per GMU
+  const gmuStats = {};
+  Object.keys(GMU_COLORS).forEach(code => {
+    gmuStats[code] = { count: 0, mpw: 0, beaches: new Set() };
+  });
+  filtered.forEach(p => {
+    const code = GMU_LOOKUP[p.nesting_beach];
+    if (!code || !gmuStats[code]) return;
+    gmuStats[code].count++;
+    gmuStats[code].mpw += (p.mpw || 0);
+    if (p.nesting_beach) gmuStats[code].beaches.add(p.nesting_beach);
+  });
+
+  // Build rows and rank
+  const rows = Object.keys(GMU_COLORS).map(code => {
+    const s = gmuStats[code];
+    const beachCount = s.beaches.size;
+    return { code, name: GMU_NAMES[code] || code, beachCount, totalParticles: s.count, totalMpw: s.mpw,
+      avgParticles: beachCount > 0 ? s.count / beachCount : 0,
+      avgMpw:       beachCount > 0 ? s.mpw   / beachCount : 0 };
+  });
+
+  const byPart = [...rows].sort((a, b) => b.totalParticles - a.totalParticles);
+  const byMpw  = [...rows].sort((a, b) => b.totalMpw       - a.totalMpw);
+  const partRank = {}; byPart.forEach((r, i) => { partRank[r.code] = i + 1; });
+  const mpwRank  = {}; byMpw.forEach( (r, i) => { mpwRank[r.code]  = i + 1; });
+
+  const header = ['gmu','gmu_name','model','beach_count','total_particles','total_mpw','avg_particles_per_beach','avg_mpw_per_beach','particle_rank','mpw_rank'];
+  const dataRows = rows.map(r => [
+    r.code, r.name, MODEL_LABELS[currentModel] || currentModel,
+    r.beachCount, r.totalParticles, r.totalMpw.toFixed(6),
+    r.avgParticles.toFixed(2), r.avgMpw.toFixed(6),
+    partRank[r.code], mpwRank[r.code]
+  ]);
+
+  const csv = [header].concat(dataRows)
+    .map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = currentModel + '_gmu_data' + _exportSuffix() + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function downloadGeoJSON() {
