@@ -820,6 +820,7 @@
       <div class="toggle-grid">
         <label class="toggle-compact"><input type="checkbox" id="togDots" checked><span class="toggle-track-sm"></span><span class="toggle-compact-label">Endpoints</span></label>
         <label class="toggle-compact" id="trajToggleRow"><input type="checkbox" id="togTrajectories"><span class="toggle-track-sm"></span><span class="toggle-compact-label">Trajectories</span></label>
+        <span id="trajCapNote" style="display:none;font-size:10px;color:var(--text-secondary);grid-column:1/-1;margin-top:-4px;"></span>
         <label class="toggle-compact"><input type="checkbox" id="togNestingZones"><span class="toggle-track-sm"></span><span class="toggle-compact-label">Nesting Zones</span></label>
         <label class="toggle-compact"><input type="checkbox" id="togStartPts" onchange="rebuildStartPoints()"><span class="toggle-track-sm"></span><span class="toggle-compact-label">Start Points</span></label>
         <label class="toggle-compact"><input type="checkbox" id="togGmuZones"><span class="toggle-track-sm"></span><span class="toggle-compact-label">GMU Zones</span></label>
@@ -1953,15 +1954,34 @@ function _buildSegments(p, weight, opacity) {
     return L.polyline([lls[i], lls[i+1]], { color: speedColor(speed), weight, opacity, renderer: canvasRenderer });
   });
 }
+const MAX_TRAJ_PARTICLES = 500;  // cap per click to keep rendering responsive
+
+function _setTrajCapNote(shown, total) {
+  const el = document.getElementById('trajCapNote');
+  if (shown != null && total != null && shown < total) {
+    el.textContent = `Showing ${shown.toLocaleString()} of ${total.toLocaleString()} matching particles`;
+    el.style.display = '';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
 function rebuildTrajectories() {
   if (trajLayer) { map.removeLayer(trajLayer); trajLayer = null; }
   _clearSelectedTraj(); trajSegments.clear(); selectedPid = null;
+  _setTrajCapNote(null, null);
   if (!document.getElementById("togTrajectories").checked) return;
   if (!trajFilterBeach && !trajFilterGmu) return;
-  const pts = trajFilterBeach
+  let pts = trajFilterBeach
     ? getFiltered().filter(p => p.nesting_beach === trajFilterBeach)
     : getFiltered().filter(p => GMU_LOOKUP[p.nesting_beach] === trajFilterGmu);
   if (!pts.length) return;
+  const totalMatched = pts.length;
+  if (pts.length > MAX_TRAJ_PARTICLES) {
+    const step = pts.length / MAX_TRAJ_PARTICLES;
+    pts = Array.from({ length: MAX_TRAJ_PARTICLES }, (_, i) => pts[Math.floor(i * step)]);
+  }
+  _setTrajCapNote(pts.length, totalMatched);
   trajLayer = L.layerGroup();
   pts.forEach(p => {
     const segs = _buildSegments(p, 1.4, 0.5);
