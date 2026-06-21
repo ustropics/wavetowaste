@@ -1072,6 +1072,9 @@ let _selectedDotKey    = null;
 
 const canvasRenderer = L.canvas({ padding: 0.5 });
 const map = L.map("map", { center: [27.8, -83.0], zoom: 7, zoomControl: false });
+map.createPane('trajDotsPane');
+map.getPane('trajDotsPane').style.zIndex = 650;  // above default overlayPane (400) and markerPane (600), so traj start/end dots always sit on top of GMU/nesting outlines
+const trajDotsRenderer = L.canvas({ padding: 0.5, pane: 'trajDotsPane' });
 
 // ── Basemap ────────────────────────────────────────────────────────────────
 const BASEMAPS = {
@@ -1988,8 +1991,8 @@ function rebuildTrajectories() {
     trajSegments.set(p.pid, segs);
     segs.forEach(s => trajLayer.addLayer(s));
     const lls = trajLatLngs(p);
-    trajLayer.addLayer(L.circleMarker(lls[0], { radius: 3, weight: 1, color: '#fff', fillColor: '#2ecc71', fillOpacity: 0.9, renderer: canvasRenderer }));
-    trajLayer.addLayer(L.circleMarker(lls[lls.length - 1], { radius: 3, weight: 1, color: '#fff', fillColor: '#e74c3c', fillOpacity: 0.9, renderer: canvasRenderer }));
+    trajLayer.addLayer(L.circleMarker(lls[0], { radius: 3, weight: 1, color: '#fff', fillColor: '#2ecc71', fillOpacity: 0.9, renderer: trajDotsRenderer }));
+    trajLayer.addLayer(L.circleMarker(lls[lls.length - 1], { radius: 3, weight: 1, color: '#fff', fillColor: '#e74c3c', fillOpacity: 0.9, renderer: trajDotsRenderer }));
   });
   trajLayer.addTo(map);
 }
