@@ -1479,17 +1479,22 @@ function _renderGmuStartingTab(gmuPts) {
     const e = regionStats.get(region); e.count++; e.mpw += (p.mpw || 0);
   });
 
-  // Group US states under a combined "United States of America" row
+  // Group US states under a combined "United States of America" row. Particles that matched
+  // the country polygon but no specific state polygon (admin_0/admin_1 boundary mismatch near
+  // the coast) get a visible "Other / Unspecified" sub-row so the state sub-rows always sum to
+  // the combined total shown on the parent row.
   const usStates = [];
-  let usCount = 0, usMpw = 0;
+  let usCount = 0, usMpw = 0, usUnspecified = { count: 0, mpw: 0 };
   for (const [name, s] of regionStats) {
     if (name === US_NAME || US_STATE_NAMES.has(name)) {
       usCount += s.count; usMpw += s.mpw;
       if (US_STATE_NAMES.has(name)) usStates.push([name, s]);
+      else { usUnspecified.count += s.count; usUnspecified.mpw += s.mpw; }
       regionStats.delete(name);
     }
   }
   usStates.sort((a, b) => b[1].count - a[1].count);
+  if (usUnspecified.count > 0) usStates.push(['Other / Unspecified', usUnspecified]);
   if (usCount > 0) regionStats.set(US_NAME, { count: usCount, mpw: usMpw });
 
   const sortedRegions = [...regionStats.entries()].sort((a, b) => b[1].count - a[1].count);
