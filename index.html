@@ -329,6 +329,14 @@
     flex-shrink: 0;
   }
   #gmuPanelTitle { font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.3px; }
+  #gmuPanelTabs { display: flex; gap: 4px; padding: 0 12px 8px; flex-shrink: 0; }
+  .gmu-tab-btn {
+    flex: 1; padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: 600;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09);
+    color: var(--text-secondary); cursor: pointer; transition: all 0.15s;
+  }
+  .gmu-tab-btn:hover { background: var(--accent-dim); color: var(--accent); }
+  .gmu-tab-btn.active { background: var(--accent-dim); border-color: rgba(0, 136, 122, 0.45); color: var(--accent); }
   #gmuPanelBody { padding: 12px 14px 14px; overflow-y: auto; flex: 1; }
   #gmuPanelStats { display: flex; gap: 12px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.07); }
   .gmu-stat { display: flex; flex-direction: column; gap: 2px; }
@@ -746,18 +754,37 @@
     <span id="gmuPanelTitle">GMU</span>
     <button class="pnl-close" onclick="closeGmuPanel()" title="Close">&#x2715;</button>
   </div>
+  <div id="gmuPanelTabs">
+    <button class="gmu-tab-btn active" id="gmuTabEnding" onclick="switchGmuTab('ending')">Ending</button>
+    <button class="gmu-tab-btn" id="gmuTabStarting" onclick="switchGmuTab('starting')">Starting</button>
+  </div>
   <div id="gmuPanelBody">
-    <div id="gmuPanelStats"></div>
-    <table id="gmuBeachTable">
-      <thead>
-        <tr>
-          <th>Beach</th>
-          <th style="text-align:right">Particles</th>
-          <th style="text-align:right">MPW (t)</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <div id="gmuEndingContent">
+      <div id="gmuPanelStats"></div>
+      <table id="gmuBeachTable">
+        <thead>
+          <tr>
+            <th>Beach</th>
+            <th style="text-align:right">Particles</th>
+            <th style="text-align:right">MPW (t)</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div id="gmuStartingContent" style="display:none;">
+      <div id="gmuSourceStats"></div>
+      <table id="gmuRegionTable">
+        <thead>
+          <tr>
+            <th>Region</th>
+            <th style="text-align:right">Particles</th>
+            <th style="text-align:right">MPW (t)</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -945,6 +972,7 @@ let trajFilterBeach = null;  // nesting beach name, or null
 let trajFilterGmu   = null;  // GMU code, or null
 let nestingLayer  = null;
 let nestingPolygons = [];
+let regionPolygons = [];
 
 // ── GMU zones ──────────────────────────────────────────────────────────────
 const GMU_COLORS = {
@@ -1056,6 +1084,8 @@ const SRC_LABELS = { coastal: 'Coastal Region', river: 'River', outside: 'Outsid
 const SRC_COLORS = { coastal: '#2ecc71', river: '#3498db', outside: '#e74c3c' };
 
 let gmuLayer = null;
+let _openGmuCode = null;
+let _gmuActiveTab = 'ending';
 let mpwHeatLayer = null, densityHeatLayer = null, dotsLayer = null, trajLayer = null, startPtsLayer = null;
 let anomalyLayers = { 'mc-det': null, 'mc-stoch': null, 'stoch-det': null };
 const trajSegments = new Map();
@@ -1159,9 +1189,12 @@ async function switchModel(key) {
     currentModel = key;
     allParticles = (window._FLORIDA_DATA[key] || {}).particles || [];
 
-    // Assign nesting beach names for freshly loaded data
+    // Assign nesting beach names and start regions for freshly loaded data
     if (nestingPolygons.length > 0) {
       allParticles.forEach(p => { if (!('nesting_beach' in p)) p.nesting_beach = nearestNestingBeach(p.lat, p.lon); });
+    }
+    if (regionPolygons.length > 0) {
+      allParticles.forEach(p => { if (!('start_region' in p)) p.start_region = cachedStartRegion(p.start_lat, p.start_lon); });
     }
     _buildModelIndex(key);
 
@@ -1203,6 +1236,90 @@ function buildNestingIndex() {
       coords,
     };
   });
+}
+
+function buildRegionIndex() {
+  if (!window._REGIONS_GEOJSON) return;
+  regionPolygons = window._REGIONS_GEOJSON.features.map(f => {
+    const g = f.geometry;
+    const polys = g.type === "Polygon" ? [g.coordinates] : g.coordinates;  // MultiPolygon: array of polygons
+    const rings = polys.map(poly => poly[0]);  // exterior ring only, ignore holes (acceptable at 110m resolution)
+    const lats = [], lons = [];
+    rings.forEach(ring => ring.forEach(([lon, lat]) => { lats.push(lat); lons.push(lon); }));
+    return {
+      name: f.properties.name,
+      minLat: Math.min(...lats), maxLat: Math.max(...lats),
+      minLon: Math.min(...lons), maxLon: Math.max(...lons),
+      rings,
+    };
+  });
+}
+
+function _pointInRing(lon, lat, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+    if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi)) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
+function _ringMinDistSq(lat, lon, ring) {
+  let best = Infinity;
+  for (let i = 0; i < ring.length - 1; i++) {
+    const [x1, y1] = ring[i], [x2, y2] = ring[i + 1];
+    const dx = x2 - x1, dy = y2 - y1, lenSq = dx * dx + dy * dy;
+    let t = lenSq > 0 ? ((lon - x1) * dx + (lat - y1) * dy) / lenSq : 0;
+    t = Math.max(0, Math.min(1, t));
+    const px = x1 + t * dx, py = y1 + t * dy;
+    const d2 = (lat - py) ** 2 + (lon - px) ** 2;
+    if (d2 < best) best = d2;
+  }
+  return best;
+}
+
+function _bboxDistSq(lat, lon, region) {
+  const dx = Math.max(region.minLon - lon, 0, lon - region.maxLon);
+  const dy = Math.max(region.minLat - lat, 0, lat - region.maxLat);
+  return dx * dx + dy * dy;
+}
+
+function nearestStartRegion(lat, lon) {
+  // 1. Exact containment (rare for ocean particles, but cheap to check first and most accurate when it hits)
+  for (const region of regionPolygons) {
+    if (lat < region.minLat || lat > region.maxLat || lon < region.minLon || lon > region.maxLon) continue;
+    if (region.rings.some(ring => _pointInRing(lon, lat, ring))) return region.name;
+  }
+  // 2. Branch-and-bound nearest-boundary fallback for offshore points: a single pass over all
+  // regions, using a cheap O(1) bbox-distance lower bound to skip the expensive exact ring
+  // distance for any region that can't possibly beat the best answer found so far. Correctness
+  // doesn't depend on visiting regions in any particular order -- only the amount of skipped
+  // work does -- so this avoids allocating and sorting a 228-entry array on every call (measured:
+  // that allocation+sort was the actual bottleneck, not the ring-distance math itself -- in
+  // practice fewer than 2 regions per call ever need the expensive check).
+  let bestName = "", bestDist = Infinity;
+  for (const region of regionPolygons) {
+    const lb = _bboxDistSq(lat, lon, region);
+    if (lb >= bestDist) continue;
+    for (const ring of region.rings) {
+      const d2 = _ringMinDistSq(lat, lon, ring);
+      if (d2 < bestDist) { bestDist = d2; bestName = region.name; }
+    }
+  }
+  return bestName || "Unknown";
+}
+
+const _startRegionCache = new Map();
+function cachedStartRegion(lat, lon) {
+  const key = lat.toFixed(4) + ',' + lon.toFixed(4);
+  let region = _startRegionCache.get(key);
+  if (region === undefined) {
+    region = nearestStartRegion(lat, lon);
+    _startRegionCache.set(key, region);
+  }
+  return region;
 }
 
 function pointNearNestingZone(lat, lon) {
@@ -1311,23 +1428,13 @@ function renderGmuZones() {
   document.getElementById('gmuLegend').style.display = 'flex';
 }
 
-function openGmuPanel(gmuCode) {
-  const color = GMU_COLORS[gmuCode] || '#aaaaaa';
-  const gmuBeaches = Object.keys(GMU_LOOKUP).filter(n => GMU_LOOKUP[n] === gmuCode).sort();
-  const beachSet = new Set(gmuBeaches);
-
-  const filtered = getFiltered();
-  const gmuPts = filtered.filter(p => beachSet.has(p.nesting_beach));
+function _renderGmuEndingTab(gmuCode, gmuPts, gmuBeaches) {
   const totalMpw = gmuPts.reduce((s, p) => s + (p.mpw || 0), 0);
-
   const beachStats = new Map();
   gmuPts.forEach(p => {
     if (!beachStats.has(p.nesting_beach)) beachStats.set(p.nesting_beach, { count: 0, mpw: 0 });
     const e = beachStats.get(p.nesting_beach); e.count++; e.mpw += (p.mpw || 0);
   });
-
-  document.getElementById('gmuPanelHeader').style.background = color;
-  document.getElementById('gmuPanelTitle').textContent = 'GMU — ' + gmuCode;
 
   const n = gmuBeaches.length;
   const avgPts = n > 0 ? (gmuPts.length / n) : 0;
@@ -1347,12 +1454,79 @@ function openGmuPanel(gmuCode) {
       '<td style="text-align:right;color:var(--text-secondary)">' + (s.mpw > 0 ? s.mpw.toFixed(2) : '—') + '</td>';
     tbody.appendChild(tr);
   });
+}
+
+function _renderGmuStartingTab(gmuPts) {
+  let nCoastal = 0, nRiver = 0, nOutside = 0;
+  gmuPts.forEach(p => {
+    const s = getSourceType(p.start_lat, p.start_lon);
+    if (s === 'coastal') nCoastal++;
+    else if (s === 'river') nRiver++;
+    else nOutside++;
+  });
+  document.getElementById('gmuSourceStats').innerHTML =
+    '<div class="gmu-stat"><span class="gmu-stat-val" style="color:' + SRC_COLORS.coastal + '">' + nCoastal.toLocaleString() + '</span><span class="gmu-stat-lbl">' + SRC_LABELS.coastal + '</span></div>' +
+    '<div class="gmu-stat"><span class="gmu-stat-val" style="color:' + SRC_COLORS.river + '">' + nRiver.toLocaleString() + '</span><span class="gmu-stat-lbl">' + SRC_LABELS.river + '</span></div>' +
+    '<div class="gmu-stat"><span class="gmu-stat-val" style="color:' + SRC_COLORS.outside + '">' + nOutside.toLocaleString() + '</span><span class="gmu-stat-lbl">' + SRC_LABELS.outside + '</span></div>';
+
+  const regionStats = new Map();
+  gmuPts.forEach(p => {
+    const region = p.start_region || 'Unknown';
+    if (!regionStats.has(region)) regionStats.set(region, { count: 0, mpw: 0 });
+    const e = regionStats.get(region); e.count++; e.mpw += (p.mpw || 0);
+  });
+  const sortedRegions = [...regionStats.entries()].sort((a, b) => b[1].count - a[1].count);
+
+  const tbody = document.querySelector('#gmuRegionTable tbody');
+  tbody.innerHTML = '';
+  sortedRegions.forEach(([name, s]) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td>' + name + '</td>' +
+      '<td style="text-align:right;color:var(--text-secondary)">' + s.count.toLocaleString() + '</td>' +
+      '<td style="text-align:right;color:var(--text-secondary)">' + (s.mpw > 0 ? s.mpw.toFixed(2) : '—') + '</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+function _updateGmuTabUI(tab) {
+  document.getElementById('gmuTabEnding').classList.toggle('active', tab === 'ending');
+  document.getElementById('gmuTabStarting').classList.toggle('active', tab === 'starting');
+  document.getElementById('gmuEndingContent').style.display = tab === 'ending' ? '' : 'none';
+  document.getElementById('gmuStartingContent').style.display = tab === 'starting' ? '' : 'none';
+}
+
+function switchGmuTab(tab) {
+  _gmuActiveTab = tab;
+  _updateGmuTabUI(tab);
+  if (_openGmuCode) openGmuPanel(_openGmuCode, true);
+}
+
+function openGmuPanel(gmuCode, preserveTab) {
+  if (!preserveTab) _gmuActiveTab = 'ending';
+  _openGmuCode = gmuCode;
+  const color = GMU_COLORS[gmuCode] || '#aaaaaa';
+  const gmuBeaches = Object.keys(GMU_LOOKUP).filter(n => GMU_LOOKUP[n] === gmuCode).sort();
+  const beachSet = new Set(gmuBeaches);
+
+  const filtered = getFiltered();
+  const gmuPts = filtered.filter(p => beachSet.has(p.nesting_beach));
+
+  document.getElementById('gmuPanelHeader').style.background = color;
+  document.getElementById('gmuPanelTitle').textContent = 'GMU — ' + gmuCode;
+  _updateGmuTabUI(_gmuActiveTab);
+
+  if (_gmuActiveTab === 'ending') {
+    _renderGmuEndingTab(gmuCode, gmuPts, gmuBeaches);
+  } else {
+    _renderGmuStartingTab(gmuPts);
+  }
 
   document.getElementById('gmuPanel').classList.add('visible');
 }
 
 function closeGmuPanel() {
   document.getElementById('gmuPanel').classList.remove('visible');
+  _openGmuCode = null;
 }
 
 function toggleNestingFilter() {
@@ -2364,10 +2538,12 @@ function init() {
 (async function() {
   try {
     await _loadScript('florida_nesting_zones.js');
+    await _loadScript('florida_regions.js');
     await _loadDataset('mc');
     buildNestingIndex();
+    buildRegionIndex();
     allParticles = (window._FLORIDA_DATA.mc || {}).particles || [];
-    allParticles.forEach(p => { p.nesting_beach = nearestNestingBeach(p.lat, p.lon); });
+    allParticles.forEach(p => { p.nesting_beach = nearestNestingBeach(p.lat, p.lon); p.start_region = cachedStartRegion(p.start_lat, p.start_lon); });
     _buildModelIndex('mc');
     init();
     _initDrawerBasemapList();
@@ -2684,6 +2860,7 @@ window.addEventListener('resize', () => {
   }
 });
 </script>
+<script src="florida_regions.js"></script>
 <script src="florida_mc_data_1.js"></script>
 <script src="florida_mc_data_2.js"></script>
 <script src="florida_mc_data_3.js"></script>
