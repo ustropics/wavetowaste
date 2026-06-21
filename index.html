@@ -338,15 +338,15 @@
   .gmu-tab-btn:hover { background: var(--accent-dim); color: var(--accent); }
   .gmu-tab-btn.active { background: var(--accent-dim); border-color: rgba(0, 136, 122, 0.45); color: var(--accent); }
   #gmuPanelBody { padding: 12px 14px 14px; overflow-y: auto; flex: 1; }
-  #gmuPanelStats { display: flex; gap: 12px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  #gmuPanelStats, #gmuSourceStats { display: flex; gap: 12px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.07); }
   .gmu-stat { display: flex; flex-direction: column; gap: 2px; }
   .gmu-stat-val { font-size: 14px; font-weight: 700; color: var(--text-primary); }
   .gmu-stat-lbl { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.4px; }
-  #gmuBeachTable { width: 100%; border-collapse: collapse; font-size: 11px; }
-  #gmuBeachTable th { text-align: left; color: var(--text-secondary); font-weight: 600; padding: 3px 4px 5px; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; }
-  #gmuBeachTable td { padding: 4px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--text-primary); vertical-align: middle; }
-  #gmuBeachTable tr:last-child td { border-bottom: none; }
-  #gmuBeachTable tr:hover td { background: rgba(255,255,255,0.03); }
+  #gmuBeachTable, #gmuRegionTable { width: 100%; border-collapse: collapse; font-size: 11px; }
+  #gmuBeachTable th, #gmuRegionTable th { text-align: left; color: var(--text-secondary); font-weight: 600; padding: 3px 4px 5px; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; }
+  #gmuBeachTable td, #gmuRegionTable td { padding: 4px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--text-primary); vertical-align: middle; }
+  #gmuBeachTable tr:last-child td, #gmuRegionTable tr:last-child td { border-bottom: none; }
+  #gmuBeachTable tr:hover td, #gmuRegionTable tr:hover td { background: rgba(255,255,255,0.03); }
 
   /* ── Custom zoom controls ────────────────────────────────────── */
   #zoomControls {
@@ -1238,8 +1238,10 @@ function buildNestingIndex() {
   });
 }
 
+const US_STATE_NAMES = new Set();
 function buildRegionIndex() {
   if (!window._REGIONS_GEOJSON) return;
+  window._REGIONS_GEOJSON.features.forEach(f => { if (f.properties.kind === 'state') US_STATE_NAMES.add(f.properties.name); });
   regionPolygons = window._REGIONS_GEOJSON.features.map(f => {
     const g = f.geometry;
     const polys = g.type === "Polygon" ? [g.coordinates] : g.coordinates;  // MultiPolygon: array of polygons
@@ -1469,12 +1471,27 @@ function _renderGmuStartingTab(gmuPts) {
     '<div class="gmu-stat"><span class="gmu-stat-val" style="color:' + SRC_COLORS.river + '">' + nRiver.toLocaleString() + '</span><span class="gmu-stat-lbl">' + SRC_LABELS.river + '</span></div>' +
     '<div class="gmu-stat"><span class="gmu-stat-val" style="color:' + SRC_COLORS.outside + '">' + nOutside.toLocaleString() + '</span><span class="gmu-stat-lbl">' + SRC_LABELS.outside + '</span></div>';
 
+  const US_NAME = 'United States of America';
   const regionStats = new Map();
   gmuPts.forEach(p => {
     const region = p.start_region || 'Unknown';
     if (!regionStats.has(region)) regionStats.set(region, { count: 0, mpw: 0 });
     const e = regionStats.get(region); e.count++; e.mpw += (p.mpw || 0);
   });
+
+  // Group US states under a combined "United States of America" row
+  const usStates = [];
+  let usCount = 0, usMpw = 0;
+  for (const [name, s] of regionStats) {
+    if (name === US_NAME || US_STATE_NAMES.has(name)) {
+      usCount += s.count; usMpw += s.mpw;
+      if (US_STATE_NAMES.has(name)) usStates.push([name, s]);
+      regionStats.delete(name);
+    }
+  }
+  usStates.sort((a, b) => b[1].count - a[1].count);
+  if (usCount > 0) regionStats.set(US_NAME, { count: usCount, mpw: usMpw });
+
   const sortedRegions = [...regionStats.entries()].sort((a, b) => b[1].count - a[1].count);
 
   const tbody = document.querySelector('#gmuRegionTable tbody');
@@ -1485,6 +1502,15 @@ function _renderGmuStartingTab(gmuPts) {
       '<td style="text-align:right;color:var(--text-secondary)">' + s.count.toLocaleString() + '</td>' +
       '<td style="text-align:right;color:var(--text-secondary)">' + (s.mpw > 0 ? s.mpw.toFixed(2) : '—') + '</td>';
     tbody.appendChild(tr);
+    if (name === US_NAME) {
+      usStates.forEach(([stateName, stateS]) => {
+        const str = document.createElement('tr');
+        str.innerHTML = '<td style="padding-left:18px;color:var(--text-secondary)">' + stateName + '</td>' +
+          '<td style="text-align:right;color:var(--text-secondary)">' + stateS.count.toLocaleString() + '</td>' +
+          '<td style="text-align:right;color:var(--text-secondary)">' + (stateS.mpw > 0 ? stateS.mpw.toFixed(2) : '—') + '</td>';
+        tbody.appendChild(str);
+      });
+    }
   });
 }
 
