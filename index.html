@@ -1101,10 +1101,14 @@ let _openPopupParticle = null;
 let _openPopupMarker   = null;
 let _selectedDotKey    = null;
 
-const canvasRenderer = L.canvas({ padding: 0.5 });
+const canvasRenderer = L.canvas({ padding: 0.5, pane: 'trajLinesPane' });
 const map = L.map("map", { center: [27.8, -83.0], zoom: 7, zoomControl: false });
+map.createPane('trajLinesPane');
+map.getPane('trajLinesPane').style.zIndex = 350;  // below default overlayPane (400), so trajectory lines render under GMU/nesting zones
+map.getPane('trajLinesPane').style.pointerEvents = 'none';  // canvas layers cover the whole viewport and would otherwise intercept clicks meant for GMU/nesting zones even where no line is drawn; this layer has no click handlers of its own, so it's safe to remove from hit-testing entirely
 map.createPane('trajDotsPane');
 map.getPane('trajDotsPane').style.zIndex = 650;  // above default overlayPane (400) and markerPane (600), so traj start/end dots always sit on top of GMU/nesting outlines
+map.getPane('trajDotsPane').style.pointerEvents = 'none';  // same reasoning as trajLinesPane -- no click handlers on these dots, must not block clicks on layers below
 const trajDotsRenderer = L.canvas({ padding: 0.5, pane: 'trajDotsPane' });
 
 // ── Basemap ────────────────────────────────────────────────────────────────
