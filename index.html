@@ -1551,9 +1551,9 @@ function rebuildFilterPills() {
   const years = [...new Set(allParticles.map(p => p.year))].sort();
   const allMonthNums = [...new Set(allParticles.map(p => p.month))].sort((a,b) => a-b);
 
-  // Only reset to all-active on first load; preserve selection across model switches
+  // Only reset on first load; preserve selection across model switches
   if (!_filtersInitialized) {
-    activeYears = new Set(years);
+    activeYears = new Set();
     activeMonths = new Set(allMonthNums);
     _filtersInitialized = true;
   }
