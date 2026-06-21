@@ -1987,6 +1987,9 @@ function rebuildTrajectories() {
     const segs = _buildSegments(p, 1.4, 0.5);
     trajSegments.set(p.pid, segs);
     segs.forEach(s => trajLayer.addLayer(s));
+    const lls = trajLatLngs(p);
+    trajLayer.addLayer(L.circleMarker(lls[0], { radius: 3, weight: 1, color: '#fff', fillColor: '#2ecc71', fillOpacity: 0.9, renderer: canvasRenderer }));
+    trajLayer.addLayer(L.circleMarker(lls[lls.length - 1], { radius: 3, weight: 1, color: '#fff', fillColor: '#e74c3c', fillOpacity: 0.9, renderer: canvasRenderer }));
   });
   trajLayer.addTo(map);
 }
