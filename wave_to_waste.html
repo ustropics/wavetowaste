@@ -950,6 +950,8 @@ const MONTH_NAMES = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','O
 
 let currentModel = 'mc';
 let allParticles  = [];
+let mcLoadPromise = null;
+let mcDataReady   = false;
 let activeYears   = new Set();
 let activeMonths  = new Set();
 let _filtersInitialized = false;
@@ -1153,6 +1155,16 @@ function showLoader(visible, msg) {
   } else {
     el.classList.add('hidden');
   }
+}
+
+function showMcBadge(msg, isError) {
+  const el = document.getElementById('mcLoadBadge');
+  document.getElementById('mcLoadBadgeMsg').textContent = msg;
+  el.classList.add('visible');
+  el.classList.toggle('error', !!isError);
+}
+function hideMcBadge() {
+  document.getElementById('mcLoadBadge').classList.remove('visible');
 }
 
 // ── Model switching ────────────────────────────────────────────────────────
