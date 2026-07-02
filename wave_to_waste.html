@@ -2375,19 +2375,16 @@ function init() {
 (async function() {
   try {
     await _loadScript('florida_nesting_zones.js');
-    await _loadDataset('mc');
     buildNestingIndex();
-    allParticles = (window._FLORIDA_DATA.mc || {}).particles || [];
-    allParticles.forEach(p => { p.nesting_beach = nearestNestingBeach(p.lat, p.lon); });
-    _buildModelIndex('mc');
     init();
     _initDrawerBasemapList();
     _syncDrawerState();
     showLoader(false);
+    startMcLoadInBackground();
   } catch(err) {
     console.error(err);
     document.getElementById('loaderMsg').textContent =
-      'Failed to load data. Make sure florida_mc_data_*.js and florida_nesting_zones.js are in the same folder as this HTML file.';
+      'Failed to load data. Make sure florida_nesting_zones.js is in the same folder as this HTML file.';
   }
 })();
 
