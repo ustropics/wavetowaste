@@ -1497,6 +1497,30 @@ function _fitBoundsToParticles(pts) {
   map.fitBounds([[minLat-0.3, minLon-0.3],[maxLat+0.3, maxLon+0.3]]);
 }
 
+function _applyMcData() {
+  allParticles = (window._FLORIDA_DATA.mc || {}).particles || [];
+  allParticles.forEach(p => { p.nesting_beach = nearestNestingBeach(p.lat, p.lon); });
+  _buildModelIndex('mc');
+  rebuildFilterPills();
+  rebuildLayers();
+  _fitBoundsToParticles(allParticles);
+}
+
+function startMcLoadInBackground() {
+  if (mcLoadPromise) return mcLoadPromise;
+  showMcBadge('Loading MC data…', false);
+  mcLoadPromise = _loadDataset('mc').then(() => {
+    mcDataReady = true;
+    hideMcBadge();
+    if (currentModel === 'mc') _applyMcData();
+  }).catch(err => {
+    console.error(err);
+    showMcBadge('Failed to load data. Make sure florida_mc_data_*.js and florida_nesting_zones.js are in the same folder as this HTML file.', true);
+    mcLoadPromise = null; // allow retry
+  });
+  return mcLoadPromise;
+}
+
 // ── Starting point dots ────────────────────────────────────────────────────
 function rebuildStartPoints() {
   if (startPtsLayer) { map.removeLayer(startPtsLayer); startPtsLayer = null; }
