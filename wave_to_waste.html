@@ -1172,46 +1172,56 @@ const MODEL_LABELS = { mc: 'MC Florida Beaching', det: 'Det Florida Beaching', s
 
 async function switchModel(key) {
   if (key === currentModel && allParticles.length > 0) return;
-  showLoader(true, 'Loading ' + key.toUpperCase() + ' data\u2026');
-  try {
-    if (!window._FLORIDA_DATA[key] || !window._FLORIDA_DATA[key]._fully_loaded) {
-      await _loadDataset(key);
+
+  if (key === 'mc') {
+    if (!mcDataReady) {
+      await startMcLoadInBackground();
+      if (!mcDataReady) return; // load failed; badge already shows the error
+    }
+    currentModel = 'mc';
+    allParticles = (window._FLORIDA_DATA.mc || {}).particles || [];
+  } else {
+    showLoader(true, 'Loading ' + key.toUpperCase() + ' data\u2026');
+    try {
+      if (!window._FLORIDA_DATA[key] || !window._FLORIDA_DATA[key]._fully_loaded) {
+        await _loadDataset(key);
+      }
+    } catch (err) {
+      console.error(err);
+      showLoader(true, 'Failed to load data. Check that florida_' + key + '_data.js is in the same folder as this HTML.');
+      return;
     }
     currentModel = key;
     allParticles = (window._FLORIDA_DATA[key] || {}).particles || [];
-
-    // Assign nesting beach names for freshly loaded data
-    if (nestingPolygons.length > 0) {
-      allParticles.forEach(p => { if (!('nesting_beach' in p)) p.nesting_beach = nearestNestingBeach(p.lat, p.lon); });
-    }
-    _buildModelIndex(key);
-
-    // Update navbar model buttons
-    document.getElementById('btnModelMc').classList.toggle('active', key === 'mc');
-    document.getElementById('btnModelDet').classList.toggle('active', key === 'det');
-    document.getElementById('btnModelStoch').classList.toggle('active', key === 'stoch');
-
-    // Show/hide trajectory toggle (MC only)
-    document.getElementById('trajToggleRow').style.display = key === 'mc' ? '' : 'none';
-    if (key !== 'mc') {
-      document.getElementById('togTrajectories').checked = false;
-      _clearSelectedTraj();
-      if (trajLayer) { map.removeLayer(trajLayer); trajLayer = null; }
-      trajSegments.clear(); selectedPid = null;
-    }
-
-    // Update panel title
-    document.getElementById('panelTitle').textContent = MODEL_LABELS[key];
-
-    hideChart();
-    rebuildFilterPills();
-    rebuildLayers();
-    _syncDrawerState();
-  } catch (err) {
-    console.error(err);
-    showLoader(true, 'Failed to load data. Check that florida_' + key + '_data.js is in the same folder as this HTML.');
-    return;
   }
+
+  // Assign nesting beach names for freshly loaded data
+  if (nestingPolygons.length > 0) {
+    allParticles.forEach(p => { if (!('nesting_beach' in p)) p.nesting_beach = nearestNestingBeach(p.lat, p.lon); });
+  }
+  _buildModelIndex(key);
+
+  // Update navbar model buttons
+  document.getElementById('btnModelMc').classList.toggle('active', key === 'mc');
+  document.getElementById('btnModelDet').classList.toggle('active', key === 'det');
+  document.getElementById('btnModelStoch').classList.toggle('active', key === 'stoch');
+
+  // Show/hide trajectory toggle (MC only)
+  document.getElementById('trajToggleRow').style.display = key === 'mc' ? '' : 'none';
+  if (key !== 'mc') {
+    document.getElementById('togTrajectories').checked = false;
+    _clearSelectedTraj();
+    if (trajLayer) { map.removeLayer(trajLayer); trajLayer = null; }
+    trajSegments.clear(); selectedPid = null;
+  }
+
+  // Update panel title
+  document.getElementById('panelTitle').textContent = MODEL_LABELS[key];
+
+  hideChart();
+  rebuildFilterPills();
+  rebuildLayers();
+  _syncDrawerState();
   showLoader(false);
 }
 
