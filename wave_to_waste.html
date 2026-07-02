@@ -1203,11 +1203,7 @@ async function switchModel(key) {
     allParticles = (window._FLORIDA_DATA[key] || {}).particles || [];
   }
 
-  // Assign nesting beach names for freshly loaded data
-  if (nestingPolygons.length > 0) {
-    allParticles.forEach(p => { if (!('nesting_beach' in p)) p.nesting_beach = nearestNestingBeach(p.lat, p.lon); });
-  }
-  _buildModelIndex(key);
+  _populateModelData(key);
 
   // Update navbar model buttons
   document.getElementById('btnModelMc').classList.toggle('active', key === 'mc');
@@ -1227,8 +1223,6 @@ async function switchModel(key) {
   document.getElementById('panelTitle').textContent = MODEL_LABELS[key];
 
   hideChart();
-  rebuildFilterPills();
-  rebuildLayers();
   _syncDrawerState();
   showLoader(false);
 }
@@ -1515,12 +1509,18 @@ function _fitBoundsToParticles(pts) {
   map.fitBounds([[minLat-0.3, minLon-0.3],[maxLat+0.3, maxLon+0.3]]);
 }
 
-function _applyMcData() {
-  allParticles = (window._FLORIDA_DATA.mc || {}).particles || [];
-  allParticles.forEach(p => { p.nesting_beach = nearestNestingBeach(p.lat, p.lon); });
-  _buildModelIndex('mc');
+function _populateModelData(key) {
+  if (nestingPolygons.length > 0) {
+    allParticles.forEach(p => { if (!('nesting_beach' in p)) p.nesting_beach = nearestNestingBeach(p.lat, p.lon); });
+  }
+  _buildModelIndex(key);
   rebuildFilterPills();
   rebuildLayers();
+}
+
+function _applyMcData() {
+  allParticles = (window._FLORIDA_DATA.mc || {}).particles || [];
+  _populateModelData('mc');
   _fitBoundsToParticles(allParticles);
 }
 
