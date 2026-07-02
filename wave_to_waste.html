@@ -898,9 +898,9 @@ if (!window._FLORIDA_DATA) window._FLORIDA_DATA = {};
 const _loadedScripts = new Set();
 
 const DATA_FILES = {
-  mc:    [],
-  det:   'florida_det_data.js',
-  stoch: 'florida_stoch_data.js',
+  mc:    ["florida_mc_data_1.js", "florida_mc_data_2.js", "florida_mc_data_3.js"],
+  det:   ["florida_det_data_1.js", "florida_det_data_2.js"],
+  stoch: ["florida_stoch_data_1.js", "florida_stoch_data_2.js", "florida_stoch_data_3.js"],
 };
 
 function _loadScript(src) {
