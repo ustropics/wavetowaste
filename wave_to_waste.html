@@ -1390,8 +1390,12 @@ function rebuildFilterPills() {
   const years = [...new Set(allParticles.map(p => p.year))].sort();
   const allMonthNums = [...new Set(allParticles.map(p => p.month))].sort((a,b) => a-b);
 
-  // Only reset to all-active on first load; preserve selection across model switches
-  if (!_filtersInitialized) {
+  // Only reset to all-active on first load with real data; preserve selection across
+  // model switches. Guarded on years.length > 0 because init() calls this once before
+  // the (background-loaded) MC dataset has arrived, when allParticles is still empty —
+  // without the guard, that empty call would permanently latch _filtersInitialized with
+  // empty active-sets, and the real data arriving later would never get selected.
+  if (!_filtersInitialized && years.length > 0) {
     activeYears = new Set(years);
     activeMonths = new Set(allMonthNums);
     _filtersInitialized = true;
