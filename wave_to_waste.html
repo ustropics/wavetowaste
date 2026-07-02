@@ -1533,7 +1533,7 @@ function startMcLoadInBackground() {
     if (currentModel === 'mc') _applyMcData();
   }).catch(err => {
     console.error(err);
-    showMcBadge('Failed to load data. Make sure florida_mc_data_*.js and florida_nesting_zones.js are in the same folder as this HTML file.', true);
+    showMcBadge('Failed to load data. Make sure florida_mc_data_*.js is in the same folder as this HTML file.', true);
     mcLoadPromise = null; // allow retry
   });
   return mcLoadPromise;
