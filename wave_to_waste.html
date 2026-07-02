@@ -942,6 +942,16 @@ async function _loadDataset(key) {
   for (const f of files) await _loadScript(f);
 }
 
+// Single chokepoint for "make sure this dataset is loaded" — routes 'mc' through the
+// shared background-load promise so concurrent callers (switchModel, toggleAnomaly)
+// can't trigger two independent _loadDataset('mc') calls that race each other.
+async function _ensureDataset(key) {
+  if (key === 'mc') { await startMcLoadInBackground(); return; }
+  if (!window._FLORIDA_DATA[key] || !window._FLORIDA_DATA[key]._fully_loaded) {
+    await _loadDataset(key);
+  }
+}
+
 
 // ── Map setup ──────────────────────────────────────────────────────────────
 const ACCENT     = "#00887a";
@@ -1183,9 +1193,7 @@ async function switchModel(key) {
   } else {
     showLoader(true, 'Loading ' + key.toUpperCase() + ' data\u2026');
     try {
-      if (!window._FLORIDA_DATA[key] || !window._FLORIDA_DATA[key]._fully_loaded) {
-        await _loadDataset(key);
-      }
+      await _ensureDataset(key);
     } catch (err) {
       console.error(err);
       showLoader(true, 'Failed to load data. Check that florida_' + key + '_data.js is in the same folder as this HTML.');
@@ -1591,8 +1599,8 @@ async function toggleAnomaly(key1, key2, on) {
   }
   showLoader(true, 'Computing anomaly\u2026');
   try {
-    if (!window._FLORIDA_DATA[key1] || !window._FLORIDA_DATA[key1]._fully_loaded) await _loadDataset(key1);
-    if (!window._FLORIDA_DATA[key2] || !window._FLORIDA_DATA[key2]._fully_loaded) await _loadDataset(key2);
+    await _ensureDataset(key1);
+    await _ensureDataset(key2);
     anomalyLayers[layerKey] = _buildAnomalyLayer(key1, key2);
     if (anomalyLayers[layerKey]) anomalyLayers[layerKey].addTo(map);
     _updateAnomalyLegend();
