@@ -1530,7 +1530,13 @@ function startMcLoadInBackground() {
   mcLoadPromise = _loadDataset('mc').then(() => {
     mcDataReady = true;
     hideMcBadge();
-    if (currentModel === 'mc') _applyMcData();
+    if (currentModel === 'mc') {
+      try {
+        _applyMcData();
+      } catch (err) {
+        console.error('Failed to apply MC data to UI:', err);
+      }
+    }
   }).catch(err => {
     console.error(err);
     showMcBadge('Failed to load data. Make sure florida_mc_data_*.js is in the same folder as this HTML file.', true);
