@@ -1342,6 +1342,10 @@ async function switchModel(key) {
   showLoader(false);
 }
 
+// ── Safe min/max (spreading large arrays into Math.min/max overflows the call stack) ──
+function _arrMin(arr) { let m = Infinity; for (let i = 0; i < arr.length; i++) if (arr[i] < m) m = arr[i]; return m; }
+function _arrMax(arr) { let m = -Infinity; for (let i = 0; i < arr.length; i++) if (arr[i] > m) m = arr[i]; return m; }
+
 // ── Nesting zones ──────────────────────────────────────────────────────────
 function buildNestingIndex() {
   if (!window._NESTING_GEOJSON) return;
@@ -1353,10 +1357,10 @@ function buildNestingIndex() {
     const lats = coords.map(c => c[1]), lons = coords.map(c => c[0]);
     return {
       props: f.properties,
-      minLat: Math.min(...lats) - 0.018,
-      maxLat: Math.max(...lats) + 0.018,
-      minLon: Math.min(...lons) - 0.018,
-      maxLon: Math.max(...lons) + 0.018,
+      minLat: _arrMin(lats) - 0.018,
+      maxLat: _arrMax(lats) + 0.018,
+      minLon: _arrMin(lons) - 0.018,
+      maxLon: _arrMax(lons) + 0.018,
       coords,
     };
   });
@@ -1407,8 +1411,8 @@ function buildRegionIndex() {
     return {
       name: f.properties.name,
       kind: f.properties.kind,
-      minLat: Math.min(...lats), maxLat: Math.max(...lats),
-      minLon: Math.min(...lons), maxLon: Math.max(...lons),
+      minLat: _arrMin(lats), maxLat: _arrMax(lats),
+      minLon: _arrMin(lons), maxLon: _arrMax(lons),
       rings,
     };
   });
@@ -1631,7 +1635,7 @@ function renderBeachZones() {
   });
 
   const vals = beachFeatures.map(f => (beachStats.get(f.properties.Beach) || {})[beachSizeMetric] || 0);
-  const maxVal = Math.max(...vals) || 1;
+  const maxVal = _arrMax(vals) || 1;
   const minR = 4, maxR = 22;
   const DENS_COLOR = { LOW: '#2ecc71', MED: '#e67e22', HIGH: '#e74c3c' };
 
@@ -2868,7 +2872,7 @@ function init() {
   renderBeachZones();
   if (allParticles.length > 0) {
     const lats = allParticles.map(p => p.lat), lons = allParticles.map(p => p.lon);
-    map.fitBounds([[Math.min(...lats)-0.3, Math.min(...lons)-0.3],[Math.max(...lats)+0.3, Math.max(...lons)+0.3]]);
+    map.fitBounds([[_arrMin(lats)-0.3, _arrMin(lons)-0.3],[_arrMax(lats)+0.3, _arrMax(lons)+0.3]]);
   }
 }
 
@@ -3034,7 +3038,7 @@ function drawCompareChart(metric) {
 
   const xs = pts.map(d => d[xKey]);
   const ys = pts.map(d => d[yKey]);
-  const maxVal = Math.max(...xs, ...ys) * 1.1;
+  const maxVal = Math.max(_arrMax(xs), _arrMax(ys)) * 1.1;
 
   const { slope, intercept, r2 } = _computeOLS(xs, ys);
 
