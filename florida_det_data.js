@@ -1,0 +1,1 @@
+(function(){if(!window._FLORIDA_DATA)window._FLORIDA_DATA={};window._FLORIDA_DATA['det']={"particles":[],"stats":{}};window._FLORIDA_DATA['det']._fully_loaded=true;})();

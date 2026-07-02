@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nesting Zone MPW Summary — January 2011</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root {
+    --bg:       #0d0f0e;
+    --bg2:      #141816;
+    --bg3:      #1c211e;
+    --border:   #2a302c;
+    --accent:   #899b2f;
+    --accent2:  #b8cc3f;
+    --text:     #e8ede9;
+    --muted:    #7a8a7d;
+    --danger:   #e86f4a;
+    --mono:     'DM Mono', monospace;
+    --sans:     'Syne', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    height: 100vh;
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: 52px 1fr;
+    grid-template-columns: 1fr 340px;
+    grid-template-areas:
+        "header header"
+        "map    sidebar";
+}
+
+/* ── Header ── */
+header {
+    grid-area: header;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 20px;
+}
+header h1 {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent2);
+}
+header .subtitle {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+}
+.header-pills {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+}
+.pill {
+    font-family: var(--mono);
+    font-size: 10px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 3px 8px;
+    color: var(--muted);
+}
+.pill span {
+    color: var(--accent2);
+    font-weight: 500;
+}
+
+/* ── Map ── */
+#map {
+    grid-area: map;
+    background: #0a0c0b;
+}
+.leaflet-control-attribution { display:none !important; }
+.leaflet-control-zoom a {
+    background: var(--bg2) !important;
+    color: var(--accent2) !important;
+    border-color: var(--border) !important;
+}
+.leaflet-control-zoom a:hover { background: var(--bg3) !important; }
+
+/* ── Sidebar ── */
+#sidebar {
+    grid-area: sidebar;
+    background: var(--bg2);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.sidebar-section {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+}
+.section-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+}
+
+/* ── Metric grid ── */
+.metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+.metric {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 10px;
+}
+.metric .val {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--accent2);
+    line-height: 1;
+}
+.metric .lbl {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    margin-top: 3px;
+    letter-spacing: 0.06em;
+}
+
+/* ── Chart ── */
+#chart-wrap {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 14px 16px;
+}
+#chart-wrap::-webkit-scrollbar { width: 4px; }
+#chart-wrap::-webkit-scrollbar-track { background: var(--bg2); }
+#chart-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.bar-row {
+    margin-bottom: 10px;
+    cursor: pointer;
+    border-radius: 3px;
+    padding: 6px 8px;
+    transition: background 0.15s;
+    border: 1px solid transparent;
+}
+.bar-row:hover, .bar-row.active {
+    background: var(--bg3);
+    border-color: var(--border);
+}
+.bar-row.active { border-color: var(--accent); }
+
+.bar-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 280px;
+    margin-bottom: 4px;
+}
+.bar-sub {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    margin-bottom: 5px;
+}
+.bar-track {
+    height: 6px;
+    background: var(--bg);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+}
+.bar-fill-mpw {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 3px;
+    transition: width 0.4s cubic-bezier(0.25,1,0.5,1);
+}
+.bar-fill-count {
+    height: 100%;
+    background: linear-gradient(90deg, #4a7a8a, #6ab8cc);
+    border-radius: 3px;
+    transition: width 0.4s cubic-bezier(0.25,1,0.5,1);
+}
+.bar-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 3px;
+}
+.bar-val {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--accent2);
+}
+.bar-val.blue { color: #6ab8cc; }
+
+/* ── Toggle ── */
+.chart-toggle {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+.toggle-btn {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.06em;
+}
+.toggle-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+/* ── Tooltip ── */
+.leaflet-tooltip-own {
+    background: var(--bg2);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 6px 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+    pointer-events: none;
+}
+
+/* ── Colorbar ── */
+#colorbar {
+    padding: 10px 16px 12px;
+    border-bottom: 1px solid var(--border);
+}
+.cb-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+.cb-gradient {
+    flex: 1;
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #1a2a0a, #4a6a15, #899b2f, #b8cc3f, #ddf060);
+}
+.cb-ticks {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 8px;
+    color: var(--muted);
+    margin-top: 3px;
+}
+</style>
+</head>
+<body>
+
+<header>
+    <h1>🐢 Nesting Zone MPW</h1>
+    <span class="subtitle">January 2011</span>
+    <div class="header-pills">
+        <div class="pill">particles <span>14,465</span></div>
+        <div class="pill">frozen <span>10,429</span></div>
+        <div class="pill">in nesting <span>255</span></div>
+        <div class="pill">zones <span>68</span></div>
+        <div class="pill">total MPW <span>172.951 t</span></div>
+    </div>
+</header>
+
+<div id="map"></div>
+
+<div id="sidebar">
+    <div class="sidebar-section">
+        <div class="section-label">Overview</div>
+        <div class="metrics">
+            <div class="metric">
+                <div class="val">172.951</div>
+                <div class="lbl">total MPW (tons)</div>
+            </div>
+            <div class="metric">
+                <div class="val">255</div>
+                <div class="lbl">particles in nesting</div>
+            </div>
+            <div class="metric">
+                <div class="val">68</div>
+                <div class="lbl">active zones</div>
+            </div>
+            <div class="metric">
+                <div class="val">0.6782</div>
+                <div class="lbl">mean MPW/particle</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="colorbar" class="sidebar-section">
+        <div class="section-label">MPW intensity (tons)</div>
+        <div class="cb-row">
+            <div class="cb-gradient"></div>
+        </div>
+        <div class="cb-ticks" id="cbTicks"></div>
+    </div>
+
+    <div class="sidebar-section" style="padding-bottom:10px;">
+        <div class="section-label">Zones ranked by</div>
+        <div class="chart-toggle">
+            <button class="toggle-btn active" id="btnMpw"  onclick="setMode('mpw')">Total MPW</button>
+            <button class="toggle-btn"        id="btnCount" onclick="setMode('count')">Particle Count</button>
+        </div>
+    </div>
+
+    <div id="chart-wrap">
+        <!-- bars injected by JS -->
+    </div>
+</div>
+
+<script>
+const STATS  = [{"beach": "St. Lucie Inlet State Park", "count": 43, "mpw_total": 26.1438, "mpw_mean": 0.608, "dur_mean": 300.6, "dist_mean": 5416.3}, {"beach": "Hutchinson Island", "count": 14, "mpw_total": 13.6986, "mpw_mean": 0.9785, "dur_mean": 294.1, "dist_mean": 5277.4}, {"beach": "Fort Lauderdale Beach", "count": 10, "mpw_total": 8.4991, "mpw_mean": 0.8499, "dur_mean": 240.5, "dist_mean": 6052.2}, {"beach": "Hutchinson Island (St. Lucie County)", "count": 17, "mpw_total": 7.8762, "mpw_mean": 0.4633, "dur_mean": 297.8, "dist_mean": 4589.8}, {"beach": "Jupiter Inlet Colony", "count": 9, "mpw_total": 6.5314, "mpw_mean": 0.7257, "dur_mean": 348.3, "dist_mean": 6169.6}, {"beach": "Canaveral National Seashore (Volusia County)", "count": 3, "mpw_total": 6.2529, "mpw_mean": 2.0843, "dur_mean": 329.0, "dist_mean": 6875.5}, {"beach": "Jupiter/Juno Beach", "count": 7, "mpw_total": 5.9595, "mpw_mean": 0.8514, "dur_mean": 298.3, "dist_mean": 6496.6}, {"beach": "St. Vincent National Wildlife Refuge", "count": 6, "mpw_total": 5.0744, "mpw_mean": 0.8457, "dur_mean": 213.7, "dist_mean": 3666.4}, {"beach": "Miami Beaches", "count": 9, "mpw_total": 5.026, "mpw_mean": 0.5584, "dur_mean": 205.7, "dist_mean": 4997.3}, {"beach": "Central Brevard County", "count": 7, "mpw_total": 4.704, "mpw_mean": 0.672, "dur_mean": 252.3, "dist_mean": 4830.3}, {"beach": "Camp Helen State Park", "count": 2, "mpw_total": 4.3029, "mpw_mean": 2.1515, "dur_mean": 158.5, "dist_mean": 2716.5}, {"beach": "Mexico Beach", "count": 8, "mpw_total": 4.1854, "mpw_mean": 0.5232, "dur_mean": 183.0, "dist_mean": 3239.6}, {"beach": "St. Joseph Peninsula State Park", "count": 3, "mpw_total": 4.1177, "mpw_mean": 1.3726, "dur_mean": 179.7, "dist_mean": 4032.7}, {"beach": "East (Okaloosa) County Beaches", "count": 1, "mpw_total": 4.1071, "mpw_mean": 4.1071, "dur_mean": 215.0, "dist_mean": 4078.7}, {"beach": "Panama City Beach", "count": 9, "mpw_total": 3.9276, "mpw_mean": 0.4364, "dur_mean": 154.8, "dist_mean": 2427.6}, {"beach": "Jupiter Beach (including Carlin)", "count": 7, "mpw_total": 3.9163, "mpw_mean": 0.5595, "dur_mean": 340.3, "dist_mean": 6001.3}, {"beach": "Virginia Key", "count": 5, "mpw_total": 3.4008, "mpw_mean": 0.6802, "dur_mean": 136.4, "dist_mean": 3721.9}, {"beach": "Jupiter Island", "count": 4, "mpw_total": 2.9866, "mpw_mean": 0.7467, "dur_mean": 349.5, "dist_mean": 5869.2}, {"beach": "Mid County Beaches", "count": 4, "mpw_total": 2.9488, "mpw_mean": 0.7372, "dur_mean": 144.8, "dist_mean": 1019.0}, {"beach": "New Smyrna Beach", "count": 3, "mpw_total": 2.9151, "mpw_mean": 0.9717, "dur_mean": 338.7, "dist_mean": 5540.7}, {"beach": "Coral Cove Park", "count": 5, "mpw_total": 2.9058, "mpw_mean": 0.5812, "dur_mean": 341.8, "dist_mean": 7025.4}, {"beach": "Manalapan", "count": 3, "mpw_total": 2.8661, "mpw_mean": 0.9554, "dur_mean": 176.3, "dist_mean": 4560.0}, {"beach": "Palm Beach (South End)", "count": 2, "mpw_total": 2.6991, "mpw_mean": 1.3496, "dur_mean": 86.0, "dist_mean": 2464.6}, {"beach": "East (Walton) County Beaches", "count": 2, "mpw_total": 2.2345, "mpw_mean": 1.1173, "dur_mean": 184.5, "dist_mean": 2906.1}, {"beach": "Ocean Ridge (Boynton)", "count": 4, "mpw_total": 2.2239, "mpw_mean": 0.556, "dur_mean": 285.0, "dist_mean": 5237.2}, {"beach": "St. Joe Beach", "count": 4, "mpw_total": 2.2139, "mpw_mean": 0.5535, "dur_mean": 183.0, "dist_mean": 4848.6}, {"beach": "Gulfstream Park", "count": 5, "mpw_total": 2.1192, "mpw_mean": 0.4238, "dur_mean": 335.2, "dist_mean": 6049.1}, {"beach": "Canaveral National Seashore", "count": 1, "mpw_total": 2.081, "mpw_mean": 2.081, "dur_mean": 167.0, "dist_mean": 3494.2}, {"beach": "Hollywood/Hallendale Beach", "count": 5, "mpw_total": 1.9947, "mpw_mean": 0.3989, "dur_mean": 325.0, "dist_mean": 5000.9}, {"beach": "North Flagler County Beaches", "count": 2, "mpw_total": 1.9308, "mpw_mean": 0.9654, "dur_mean": 357.0, "dist_mean": 6644.1}, {"beach": "Jetty Park", "count": 1, "mpw_total": 1.7355, "mpw_mean": 1.7355, "dur_mean": 225.0, "dist_mean": 2742.4}, {"beach": "Cape San Blas (AFB)", "count": 1, "mpw_total": 1.6562, "mpw_mean": 1.6562, "dur_mean": 178.0, "dist_mean": 3380.1}, {"beach": "Par III to Kreusler", "count": 2, "mpw_total": 1.5955, "mpw_mean": 0.7977, "dur_mean": 278.5, "dist_mean": 6910.8}, {"beach": "John D. MacArthur Beach State Park", "count": 2, "mpw_total": 1.3076, "mpw_mean": 0.6538, "dur_mean": 373.5, "dist_mean": 9644.3}, {"beach": "South Brevard County", "count": 3, "mpw_total": 1.2989, "mpw_mean": 0.433, "dur_mean": 289.3, "dist_mean": 4733.1}, {"beach": "Sloans Curve", "count": 3, "mpw_total": 1.2258, "mpw_mean": 0.4086, "dur_mean": 325.3, "dist_mean": 7333.7}, {"beach": "Cocoa Beach", "count": 2, "mpw_total": 1.0565, "mpw_mean": 0.5282, "dur_mean": 170.0, "dist_mean": 2771.7}, {"beach": "Deerfield/Hillsboro Beach", "count": 2, "mpw_total": 0.9359, "mpw_mean": 0.4679, "dur_mean": 195.0, "dist_mean": 4162.9}, {"beach": "Merritt Island National Wildlife Refuge", "count": 2, "mpw_total": 0.8301, "mpw_mean": 0.415, "dur_mean": 285.5, "dist_mean": 6215.7}, {"beach": "Pompano/Lauderdale by-the-sea", "count": 2, "mpw_total": 0.6567, "mpw_mean": 0.3283, "dur_mean": 240.5, "dist_mean": 4914.7}, {"beach": "Cabbage/Shell Key", "count": 1, "mpw_total": 0.5684, "mpw_mean": 0.5684, "dur_mean": 150.0, "dist_mean": 978.2}, {"beach": "South Cocoa Beach", "count": 1, "mpw_total": 0.5611, "mpw_mean": 0.5611, "dur_mean": 160.0, "dist_mean": 2838.5}, {"beach": "North County Beaches", "count": 1, "mpw_total": 0.5389, "mpw_mean": 0.5389, "dur_mean": 145.0, "dist_mean": 717.3}, {"beach": "Manasota Key (Sarasota County)", "count": 1, "mpw_total": 0.5369, "mpw_mean": 0.5369, "dur_mean": 254.0, "dist_mean": 1654.1}, {"beach": "Tequesta Beaches", "count": 2, "mpw_total": 0.4902, "mpw_mean": 0.2451, "dur_mean": 352.5, "dist_mean": 7436.9}, {"beach": "ENP - Cape Sable (South)", "count": 1, "mpw_total": 0.4857, "mpw_mean": 0.4857, "dur_mean": 131.0, "dist_mean": 2790.5}, {"beach": "South Palm Beach", "count": 1, "mpw_total": 0.4832, "mpw_mean": 0.4832, "dur_mean": 163.0, "dist_mean": 6776.4}, {"beach": "West (Walton) County Beaches", "count": 2, "mpw_total": 0.4473, "mpw_mean": 0.2236, "dur_mean": 143.0, "dist_mean": 1313.2}, {"beach": "Patrick Air Force Base", "count": 1, "mpw_total": 0.4457, "mpw_mean": 0.4457, "dur_mean": 166.0, "dist_mean": 3007.4}, {"beach": "Volusia County Beaches (North)", "count": 1, "mpw_total": 0.4342, "mpw_mean": 0.4342, "dur_mean": 366.0, "dist_mean": 4955.6}, {"beach": "Eglin Air Force Base (Okaloosa - West)", "count": 2, "mpw_total": 0.4202, "mpw_mean": 0.2101, "dur_mean": 122.5, "dist_mean": 1241.8}, {"beach": "Volusia County Beaches (South)", "count": 1, "mpw_total": 0.4022, "mpw_mean": 0.4022, "dur_mean": 352.0, "dist_mean": 4963.6}, {"beach": "John U. Lloyd State Park", "count": 1, "mpw_total": 0.3771, "mpw_mean": 0.3771, "dur_mean": 328.0, "dist_mean": 5339.6}, {"beach": "Delray Beach", "count": 1, "mpw_total": 0.3727, "mpw_mean": 0.3727, "dur_mean": 349.0, "dist_mean": 5720.3}, {"beach": "Tyndall Air Force Base", "count": 1, "mpw_total": 0.3712, "mpw_mean": 0.3712, "dur_mean": 153.0, "dist_mean": 1429.3}, {"beach": "Cape St. George", "count": 1, "mpw_total": 0.3549, "mpw_mean": 0.3549, "dur_mean": 212.0, "dist_mean": 1431.7}, {"beach": "Highland Beach", "count": 1, "mpw_total": 0.3509, "mpw_mean": 0.3509, "dur_mean": 333.0, "dist_mean": 6003.4}, {"beach": "Canaveral Air Force Station", "count": 1, "mpw_total": 0.3304, "mpw_mean": 0.3304, "dur_mean": 343.0, "dist_mean": 3866.6}, {"beach": "Mid (Okaloosa) County Beaches", "count": 1, "mpw_total": 0.3276, "mpw_mean": 0.3276, "dur_mean": 120.0, "dist_mean": 1226.7}, {"beach": "Middle (Walton) County Beaches", "count": 1, "mpw_total": 0.3265, "mpw_mean": 0.3265, "dur_mean": 126.0, "dist_mean": 1199.3}, {"beach": "Captiva Island", "count": 1, "mpw_total": 0.3137, "mpw_mean": 0.3137, "dur_mean": 256.0, "dist_mean": 3745.7}, {"beach": "Miramar Beach", "count": 1, "mpw_total": 0.3094, "mpw_mean": 0.3094, "dur_mean": 195.0, "dist_mean": 3676.2}, {"beach": "Palm Beach Shores", "count": 1, "mpw_total": 0.3073, "mpw_mean": 0.3073, "dur_mean": 329.0, "dist_mean": 8586.1}, {"beach": "Saint Pete Beach", "count": 1, "mpw_total": 0.2997, "mpw_mean": 0.2997, "dur_mean": 179.0, "dist_mean": 1157.2}, {"beach": "Topsail Hill State Park", "count": 1, "mpw_total": 0.248, "mpw_mean": 0.248, "dur_mean": 111.0, "dist_mean": 1230.3}, {"beach": "Eglin Air Force Base (Okaloosa - East)", "count": 1, "mpw_total": 0.2463, "mpw_mean": 0.2463, "dur_mean": 123.0, "dist_mean": 1222.0}, {"beach": "Boca Raton Beaches", "count": 1, "mpw_total": 0.2301, "mpw_mean": 0.2301, "dur_mean": 125.0, "dist_mean": 2650.3}, {"beach": "Anclote Key State Park", "count": 1, "mpw_total": 0.2291, "mpw_mean": 0.2291, "dur_mean": 174.0, "dist_mean": 1038.4}];
+const CELLS  = [{"beach": "Fort Clinch", "minx": -81.4529, "miny": 30.6908, "maxx": -81.4262, "maxy": 30.7053}, {"beach": "Amelia Island", "minx": -81.4432, "miny": 30.5263, "maxx": -81.4285, "maxy": 30.6908}, {"beach": "Amelia Island State Park", "minx": -81.4451, "miny": 30.515, "maxx": -81.4357, "maxy": 30.5264}, {"beach": "Little Talbot Island State Park", "minx": -81.426, "miny": 30.4265, "maxx": -81.406, "maxy": 30.4903}, {"beach": "Huguenot Park", "minx": -81.4119, "miny": 30.4036, "maxx": -81.4028, "maxy": 30.4201}, {"beach": "Mayport Naval Air Station", "minx": -81.3964, "miny": 30.3818, "maxx": -81.392, "maxy": 30.397}, {"beach": "Hanna Park", "minx": -81.3975, "miny": 30.3604, "maxx": -81.3964, "maxy": 30.3818}, {"beach": "S Duval County Beaches", "minx": -81.3974, "miny": 30.253, "maxx": -81.3804, "maxy": 30.3604}, {"beach": "Ponte Vedra (North)", "minx": -81.3804, "miny": 30.2171, "maxx": -81.3707, "maxy": 30.253}, {"beach": "Beach Club Drive (North)", "minx": -81.3707, "miny": 30.1935, "maxx": -81.364, "maxy": 30.2171}, {"beach": "Beach Club Drive (South)", "minx": -81.364, "miny": 30.1411, "maxx": -81.3504, "maxy": 30.1935}, {"beach": "Old Ponte Vedra", "minx": -81.3504, "miny": 30.1272, "maxx": -81.3471, "maxy": 30.1411}, {"beach": "Guana Tolomato Matanzas NERR", "minx": -81.3471, "miny": 30.0684, "maxx": -81.3331, "maxy": 30.1272}, {"beach": "Guana River (South)", "minx": -81.3331, "miny": 30.0226, "maxx": -81.3228, "maxy": 30.0684}, {"beach": "Ponte Vedra (South)", "minx": -81.3228, "miny": 29.9525, "maxx": -81.3039, "maxy": 30.0226}, {"beach": "Vilano Beach", "minx": -81.3039, "miny": 29.9096, "maxx": -81.2885, "maxy": 29.9525}, {"beach": "Anastasia State Park", "minx": -81.284, "miny": 29.8596, "maxx": -81.2661, "maxy": 29.9085}, {"beach": "Saint Augustine Beach", "minx": -81.2661, "miny": 29.7694, "maxx": -81.2515, "maxy": 29.8596}, {"beach": "Fort Matanzas (North)", "minx": -81.2515, "miny": 29.706, "maxx": -81.2273, "maxy": 29.7694}, {"beach": "Fort Matanzas (South)", "minx": -81.2275, "miny": 29.6709, "maxx": -81.2131, "maxy": 29.7042}, {"beach": "Marineland Beach", "minx": -81.2131, "miny": 29.6432, "maxx": -81.2015, "maxy": 29.6709}, {"beach": "North Flagler County Beaches", "minx": -81.1976, "miny": 29.5845, "maxx": -81.1765, "maxy": 29.6337}, {"beach": "South Flagler County Beaches", "minx": -81.1765, "miny": 29.5091, "maxx": -81.1407, "maxy": 29.5845}, {"beach": "Washington Oaks", "minx": -81.2015, "miny": 29.6337, "maxx": -81.1976, "maxy": 29.6432}, {"beach": "Flagler Beach", "minx": -81.1407, "miny": 29.4417, "maxx": -81.1087, "maxy": 29.5091}, {"beach": "Flagler Beach SP", "minx": -81.1087, "miny": 29.4272, "maxx": -81.1021, "maxy": 29.4417}, {"beach": "North Peninsula State Park", "minx": -81.1021, "miny": 29.3872, "maxx": -81.0838, "maxy": 29.4272}, {"beach": "Volusia County Beaches (North)", "minx": -81.0838, "miny": 29.2185, "maxx": -81.0025, "maxy": 29.3872}, {"beach": "New Smyrna Beach", "minx": -80.9178, "miny": 28.9386, "maxx": -80.8301, "maxy": 29.0745}, {"beach": "Canaveral National Seashore (Volusia County)", "minx": -80.8301, "miny": 28.7912, "maxx": -80.733, "maxy": 28.9386}, {"beach": "Volusia County Beaches (South)", "minx": -81.0025, "miny": 29.0785, "maxx": -80.9181, "maxy": 29.2185}, {"beach": "Canaveral National Seashore", "minx": -80.733, "miny": 28.6442, "maxx": -80.624, "maxy": 28.7912}, {"beach": "Merritt Island National Wildlife Refuge", "minx": -80.624, "miny": 28.5686, "maxx": -80.5691, "maxy": 28.6442}, {"beach": "Canaveral Air Force Station", "minx": -80.5842, "miny": 28.4116, "maxx": -80.5254, "maxy": 28.5686}, {"beach": "Jetty Park", "minx": -80.6024, "miny": 28.3655, "maxx": -80.5885, "maxy": 28.408}, {"beach": "Cocoa Beach", "minx": -80.6075, "miny": 28.3014, "maxx": -80.6024, "maxy": 28.3655}, {"beach": "South Cocoa Beach", "minx": -80.6073, "miny": 28.272, "maxx": -80.6054, "maxy": 28.3014}, {"beach": "Patrick Air Force Base", "minx": -80.6054, "miny": 28.2127, "maxx": -80.5967, "maxy": 28.272}, {"beach": "South Brevard County", "minx": -80.5453, "miny": 27.8746, "maxx": -80.4543, "maxy": 28.0434}, {"beach": "Sebastian Inlet State Park (Brevard County)", "minx": -80.4543, "miny": 27.8619, "maxx": -80.4466, "maxy": 27.8746}, {"beach": "Central Brevard County", "minx": -80.5967, "miny": 28.0434, "maxx": -80.5453, "maxy": 28.2127}, {"beach": "Sebastian Inlet State Park (Indian River County)", "minx": -80.4469, "miny": 27.8333, "maxx": -80.4329, "maxy": 27.86}, {"beach": "Wabasso Beach", "minx": -80.4329, "miny": 27.7677, "maxx": -80.3987, "maxy": 27.8333}, {"beach": "Wabasso Beach (South)", "minx": -80.3988, "miny": 27.7569, "maxx": -80.3927, "maxy": 27.7679}, {"beach": "Indian River Shores (North)", "minx": -80.3927, "miny": 27.7506, "maxx": -80.389, "maxy": 27.7569}, {"beach": "Indian River Shores", "minx": -80.389, "miny": 27.6749, "maxx": -80.3618, "maxy": 27.7506}, {"beach": "Vero Beach", "minx": -80.3618, "miny": 27.6204, "maxx": -80.3459, "maxy": 27.6749}, {"beach": "South Indian River County Beaches", "minx": -80.3459, "miny": 27.5573, "maxx": -80.3216, "maxy": 27.6204}, {"beach": "Avalon State Park", "minx": -80.3216, "miny": 27.5326, "maxx": -80.3139, "maxy": 27.5573}, {"beach": "North Saint Lucie County Beaches", "minx": -80.3139, "miny": 27.4792, "maxx": -80.2932, "maxy": 27.5326}, {"beach": "Fort Pierce Inlet State Park", "minx": -80.2932, "miny": 27.4733, "maxx": -80.2897, "maxy": 27.4792}, {"beach": "Hutchinson Island (St. Lucie County)", "minx": -80.2904, "miny": 27.2629, "maxx": -80.1998, "maxy": 27.4707}, {"beach": "Hutchinson Island", "minx": -80.1998, "miny": 27.1682, "maxx": -80.1532, "maxy": 27.2629}, {"beach": "St. Lucie Inlet State Park", "minx": -80.1578, "miny": 27.1307, "maxx": -80.1452, "maxy": 27.1631}, {"beach": "Hobe Sound NWR", "minx": -80.1452, "miny": 27.0864, "maxx": -80.1249, "maxy": 27.1307}, {"beach": "Jupiter Island", "minx": -80.1249, "miny": 26.9704, "maxx": -80.0805, "maxy": 27.0864}, {"beach": "Tequesta Beaches", "minx": -80.0805, "miny": 26.9565, "maxx": -80.0762, "maxy": 26.9704}, {"beach": "Coral Cove Park", "minx": -80.0787, "miny": 26.9621, "maxx": -80.0776, "maxy": 26.9645}, {"beach": "Jupiter Inlet Colony", "minx": -80.0762, "miny": 26.9447, "maxx": -80.0711, "maxy": 26.9565}, {"beach": "Jupiter Beach (including Carlin)", "minx": -80.0718, "miny": 26.9205, "maxx": -80.0654, "maxy": 26.9436}, {"beach": "Jupiter/Juno Beach", "minx": -80.0654, "miny": 26.8362, "maxx": -80.0413, "maxy": 26.9205}, {"beach": "John D. MacArthur Beach State Park", "minx": -80.0413, "miny": 26.813, "maxx": -80.035, "maxy": 26.8362}, {"beach": "Singer Island South", "minx": -80.0323, "miny": 26.7815, "maxx": -80.0317, "maxy": 26.7927}, {"beach": "Ocean Reef Park", "minx": -80.0321, "miny": 26.7927, "maxx": -80.032, "maxy": 26.7947}, {"beach": "Palm Beach Shores", "minx": -80.0318, "miny": 26.7737, "maxx": -80.0313, "maxy": 26.7815}, {"beach": "Lake Worth Inlet", "minx": -80.037, "miny": 26.7616, "maxx": -80.0352, "maxy": 26.7713}, {"beach": "Palm Beach (North End)", "minx": -80.0368, "miny": 26.7272, "maxx": -80.0348, "maxy": 26.7616}, {"beach": "Town of Palm Beach (Midtown)", "minx": -80.0348, "miny": 26.6925, "maxx": -80.0328, "maxy": 26.7272}, {"beach": "Breakers", "minx": -80.0339, "miny": 26.7107, "maxx": -80.0329, "maxy": 26.719}, {"beach": "Sloans Curve", "minx": -80.0374, "miny": 26.6294, "maxx": -80.037, "maxy": 26.6468}, {"beach": "Par III to Kreusler", "minx": -80.037, "miny": 26.6168, "maxx": -80.0366, "maxy": 26.6294}, {"beach": "Kreusler Park", "minx": -80.0366, "miny": 26.6152, "maxx": -80.0366, "maxy": 26.6168}, {"beach": "Lake Worth Municipal Beach", "minx": -80.0366, "miny": 26.6116, "maxx": -80.0365, "maxy": 26.6154}, {"beach": "South Palm Beach", "minx": -80.0375, "miny": 26.586, "maxx": -80.0365, "maxy": 26.6116}, {"beach": "Lantana", "minx": -80.0377, "miny": 26.584, "maxx": -80.0375, "maxy": 26.586}, {"beach": "Manalapan", "minx": -80.0419, "miny": 26.5456, "maxx": -80.0375, "maxy": 26.584}, {"beach": "Ocean Inlet Park", "minx": -80.0435, "miny": 26.5429, "maxx": -80.0428, "maxy": 26.5452}, {"beach": "Ocean Ridge (Boynton)", "minx": -80.052, "miny": 26.499, "maxx": -80.0435, "maxy": 26.5429}, {"beach": "Gulfstream Park", "minx": -80.0514, "miny": 26.5042, "maxx": -80.0507, "maxy": 26.5075}, {"beach": "Gulfstream", "minx": -80.0552, "miny": 26.4758, "maxx": -80.052, "maxy": 26.499}, {"beach": "Delray Beach", "minx": -80.0617, "miny": 26.4321, "maxx": -80.0552, "maxy": 26.4758}, {"beach": "Highland Beach", "minx": -80.0662, "miny": 26.3909, "maxx": -80.0617, "maxy": 26.4321}, {"beach": "Boca Raton Beaches", "minx": -80.0746, "miny": 26.321, "maxx": -80.0662, "maxy": 26.3909}, {"beach": "Singer Island North", "minx": -80.035, "miny": 26.7947, "maxx": -80.0314, "maxy": 26.813}, {"beach": "Palm Beach (South End)", "minx": -80.0371, "miny": 26.6468, "maxx": -80.0335, "maxy": 26.6925}, {"beach": "Deerfield/Hillsboro Beach", "minx": -80.0802, "miny": 26.2586, "maxx": -80.0746, "maxy": 26.321}, {"beach": "Pompano/Lauderdale by-the-sea", "minx": -80.0948, "miny": 26.1895, "maxx": -80.0819, "maxy": 26.2579}, {"beach": "Fort Lauderdale Beach", "minx": -80.1049, "miny": 26.0952, "maxx": -80.0948, "maxy": 26.1895}, {"beach": "John U. Lloyd State Park", "minx": -80.1114, "miny": 26.0604, "maxx": -80.1081, "maxy": 26.0922}, {"beach": "Hollywood/Hallendale Beach", "minx": -80.1183, "miny": 25.9752, "maxx": -80.1114, "maxy": 26.0604}, {"beach": "Golden Beach", "minx": -80.1187, "miny": 25.9571, "maxx": -80.1182, "maxy": 25.9752}, {"beach": "Miami Beaches", "minx": -80.1309, "miny": 25.7643, "maxx": -80.1185, "maxy": 25.9571}, {"beach": "Fisher Island", "minx": -80.1399, "miny": 25.7555, "maxx": -80.1347, "maxy": 25.7617}, {"beach": "Virginia Key", "minx": -80.1606, "miny": 25.7323, "maxx": -80.1423, "maxy": 25.7578}, {"beach": "Key Biscayne", "minx": -80.1566, "miny": 25.683, "maxx": -80.1476, "maxy": 25.7264}, {"beach": "Cape Florida State Park", "minx": -80.1558, "miny": 25.6667, "maxx": -80.1528, "maxy": 25.683}, {"beach": "Biscayne National Park", "minx": -80.2035, "miny": 25.4151, "maxx": -80.1775, "maxy": 25.4925}, {"beach": "Upper Matecumbe Key", "minx": -80.6418, "miny": 24.908, "maxx": -80.6338, "maxy": 24.9144}, {"beach": "Lower Matecumbe Sea Oats Bch", "minx": -80.7202, "miny": 24.8604, "maxx": -80.6986, "maxy": 24.8742}, {"beach": "Long Key State Park", "minx": -80.8419, "miny": 24.8056, "maxx": -80.8175, "maxy": 24.8126}, {"beach": "Long Key (West End)", "minx": -80.8488, "miny": 24.803, "maxx": -80.8419, "maxy": 24.8056}, {"beach": "Little Crawl Key", "minx": -80.9835, "miny": 24.7398, "maxx": -80.9799, "maxy": 24.7415}, {"beach": "Fat Deer Key", "minx": -81.0111, "miny": 24.7231, "maxx": -80.9999, "maxy": 24.7303}, {"beach": "Key Colony Beach", "minx": -81.0238, "miny": 24.7164, "maxx": -81.012, "maxy": 24.7218}, {"beach": "Sombrero Beach", "minx": -81.0866, "miny": 24.691, "maxx": -81.0827, "maxy": 24.6921}, {"beach": "Bahia Honda State Park", "minx": -81.2811, "miny": 24.6541, "maxx": -81.2497, "maxy": 24.6686}, {"beach": "Big Pine Key", "minx": -81.3573, "miny": 24.6339, "maxx": -81.339, "maxy": 24.64}, {"beach": "Boca Chica Key", "minx": -81.6769, "miny": 24.5633, "maxx": -81.6709, "maxy": 24.5678}, {"beach": "Smathers Beach (Key West)", "minx": -81.7755, "miny": 24.5504, "maxx": -81.7656, "maxy": 24.5525}, {"beach": "Nature Preserve Beach (Key West)", "minx": -81.7797, "miny": 24.5497, "maxx": -81.7766, "maxy": 24.5504}, {"beach": "Rest Beach (Key West)", "minx": -81.7847, "miny": 24.5476, "maxx": -81.783, "maxy": 24.5487}, {"beach": "Clarence Higgs Beach (Key West)", "minx": -81.7885, "miny": 24.5469, "maxx": -81.787, "maxy": 24.547}, {"beach": "Residential Beach", "minx": -81.802, "miny": 24.5458, "maxx": -81.7991, "maxy": 24.5465}, {"beach": "Patio Beach", "minx": -81.8083, "miny": 24.545, "maxx": -81.8055, "maxy": 24.5454}, {"beach": "Fort Zachary Taylor State Park", "minx": -81.8124, "miny": 24.5452, "maxx": -81.8083, "maxy": 24.5457}, {"beach": "Woman Key", "minx": -81.9794, "miny": 24.5232, "maxx": -81.967, "maxy": 24.5245}, {"beach": "Boca Grande Key", "minx": -82.0099, "miny": 24.5276, "maxx": -82.0059, "maxy": 24.5378}, {"beach": "Marquesas Keys", "minx": -82.1658, "miny": 24.5481, "maxx": -82.1182, "maxy": 24.5976}, {"beach": "Dry Tortugas - East Key", "minx": -82.8057, "miny": 24.6503, "maxx": -82.8038, "maxy": 24.6522}, {"beach": "Dry Tortugas - Garden Key", "minx": -82.8738, "miny": 24.6265, "maxx": -82.8716, "maxy": 24.6299}, {"beach": "Dry Tortugas - Loggerhead Key", "minx": -82.926, "miny": 24.6278, "maxx": -82.9157, "maxy": 24.6372}, {"beach": "Dry Tortugas - Bush Key", "minx": -82.8703, "miny": 24.6272, "maxx": -82.8629, "maxy": 24.629}, {"beach": "Dry Tortugas - Long Key", "minx": -82.8637, "miny": 24.6248, "maxx": -82.863, "maxy": 24.628}, {"beach": "ENP - Cape Sable (South)", "minx": -81.1417, "miny": 25.1164, "maxx": -81.0859, "maxy": 25.1829}, {"beach": "ENP - Cape Sable (North)", "minx": -81.1721, "miny": 25.1834, "maxx": -81.1412, "maxy": 25.2407}, {"beach": "Dry Tortugas - Middle Key", "minx": -82.8287, "miny": 24.6498, "maxx": -82.8279, "maxy": 24.6502}, {"beach": "Ten Thousand Islands National Wildlife Refuge", "minx": -81.6368, "miny": 25.8505, "maxx": -81.5401, "maxy": 25.8953}, {"beach": "Cape Romano", "minx": -81.7162, "miny": 25.844, "maxx": -81.6725, "maxy": 25.9021}, {"beach": "Marco Island", "minx": -81.7538, "miny": 25.9094, "maxx": -81.729, "maxy": 25.9642}, {"beach": "Sea Oat Island", "minx": -81.7481, "miny": 25.9804, "maxx": -81.746, "maxy": 25.9868}, {"beach": "Keewaydin Island (South)", "minx": -81.7807, "miny": 25.9915, "maxx": -81.7508, "maxy": 26.047}, {"beach": "Keewaydin Island (North)", "minx": -81.8017, "miny": 26.047, "maxx": -81.7807, "maxy": 26.0918}, {"beach": "Naples Beach", "minx": -81.8143, "miny": 26.0935, "maxx": -81.8009, "maxy": 26.1737}, {"beach": "Parkshore Beach", "minx": -81.817, "miny": 26.1745, "maxx": -81.8147, "maxy": 26.2109}, {"beach": "Clam Pass Park", "minx": -81.8178, "miny": 26.2109, "maxx": -81.817, "maxy": 26.2196}, {"beach": "Vanderbilt Beach", "minx": -81.8278, "miny": 26.2199, "maxx": -81.8176, "maxy": 26.2723}, {"beach": "Wiggins Pass", "minx": -81.8315, "miny": 26.2723, "maxx": -81.8278, "maxy": 26.2886}, {"beach": "Barefoot Beach Preserve", "minx": -81.8458, "miny": 26.2895, "maxx": -81.8309, "maxy": 26.3302}, {"beach": "Bonita Beach", "minx": -81.8631, "miny": 26.3302, "maxx": -81.8458, "maxy": 26.3643}, {"beach": "Big Hickory Island", "minx": -81.8679, "miny": 26.3666, "maxx": -81.8616, "maxy": 26.3786}, {"beach": "Lovers Key State Park", "minx": -81.886, "miny": 26.3792, "maxx": -81.8687, "maxy": 26.4035}, {"beach": "Estero Island", "minx": -81.968, "miny": 26.4016, "maxx": -81.8835, "maxy": 26.4655}, {"beach": "Bunche Beach", "minx": -81.9716, "miny": 26.4709, "maxx": -81.96, "maxy": 26.4787}, {"beach": "Sanibel Island (East)", "minx": -82.0801, "miny": 26.4218, "maxx": -82.0137, "maxy": 26.4545}, {"beach": "Sanibel Island (West)", "minx": -82.1822, "miny": 26.4218, "maxx": -82.0801, "maxy": 26.4825}, {"beach": "Captiva Island", "minx": -82.2016, "miny": 26.4827, "maxx": -82.1838, "maxy": 26.5513}, {"beach": "North Captiva Island State Park", "minx": -82.2241, "miny": 26.5601, "maxx": -82.2021, "maxy": 26.5932}, {"beach": "North Captiva", "minx": -82.2245, "miny": 26.5932, "maxx": -82.2198, "maxy": 26.6072}, {"beach": "Cayo Costa State Park", "minx": -82.2636, "miny": 26.6131, "maxx": -82.2223, "maxy": 26.7076}, {"beach": "Gasparilla Island State Park", "minx": -82.2642, "miny": 26.717, "maxx": -82.2592, "maxy": 26.7435}, {"beach": "Gasparilla Island South (Lee County)", "minx": -82.2723, "miny": 26.7274, "maxx": -82.2633, "maxy": 26.7898}, {"beach": "North Captiva Island (South)", "minx": -82.2021, "miny": 26.5557, "maxx": -82.2002, "maxy": 26.5601}, {"beach": "Gasparilla Island North (Charlotte County)", "minx": -82.2847, "miny": 26.7897, "maxx": -82.2721, "maxy": 26.811}, {"beach": "Little Gasparilla Island", "minx": -82.2991, "miny": 26.8157, "maxx": -82.2813, "maxy": 26.8396}, {"beach": "Don Pedro State Park", "minx": -82.3097, "miny": 26.8396, "maxx": -82.2991, "maxy": 26.8543}, {"beach": "Don Pedro Island", "minx": -82.3402, "miny": 26.8543, "maxx": -82.3097, "maxy": 26.8984}, {"beach": "Stump Pass State Park", "minx": -82.3534, "miny": 26.8971, "maxx": -82.3406, "maxy": 26.9109}, {"beach": "Manasota Key", "minx": -82.3743, "miny": 26.9109, "maxx": -82.3534, "maxy": 26.946}, {"beach": "Manasota Key (Sarasota County)", "minx": -82.4419, "miny": 26.946, "maxx": -82.3743, "maxy": 27.0549}, {"beach": "Venice Beaches", "minx": -82.4678, "miny": 27.0549, "maxx": -82.4419, "maxy": 27.1124}, {"beach": "Casey Key", "minx": -82.5121, "miny": 27.1133, "maxx": -82.4687, "maxy": 27.2084}, {"beach": "Siesta Key (South)", "minx": -82.5264, "miny": 27.2084, "maxx": -82.5121, "maxy": 27.2359}, {"beach": "Lido Key", "minx": -82.5887, "miny": 27.2973, "maxx": -82.5643, "maxy": 27.3267}, {"beach": "Longboat Key (South)", "minx": -82.6428, "miny": 27.3284, "maxx": -82.5863, "maxy": 27.3897}, {"beach": "Longboat Key (North)", "minx": -82.6897, "miny": 27.3897, "maxx": -82.6428, "maxy": 27.4364}, {"beach": "Anna Maria Island", "minx": -82.7466, "miny": 27.4443, "maxx": -82.691, "maxy": 27.539}, {"beach": "Fort Desoto County Park", "minx": -82.7437, "miny": 27.6115, "maxx": -82.6984, "maxy": 27.6495}, {"beach": "Cabbage/Shell Key", "minx": -82.7463, "miny": 27.6498, "maxx": -82.7322, "maxy": 27.6762}, {"beach": "Saint Pete Beach", "minx": -82.7521, "miny": 27.6832, "maxx": -82.7379, "maxy": 27.7362}, {"beach": "Mid County Beaches", "minx": -82.8379, "miny": 27.7391, "maxx": -82.7567, "maxy": 27.8364}, {"beach": "North County Beaches", "minx": -82.8519, "miny": 27.8364, "maxx": -82.8271, "maxy": 28.0194}, {"beach": "Caladesi Island State Park", "minx": -82.8271, "miny": 28.0194, "maxx": -82.8159, "maxy": 28.0517}, {"beach": "Honeymoon Island State Park", "minx": -82.8372, "miny": 28.0539, "maxx": -82.8154, "maxy": 28.0977}, {"beach": "Anclote Key State Park", "minx": -82.8521, "miny": 28.1565, "maxx": -82.8378, "maxy": 28.2342}, {"beach": "Bald Point State Park", "minx": -84.3436, "miny": 29.8999, "maxx": -84.3334, "maxy": 29.9479}, {"beach": "Alligator Point", "minx": -84.424, "miny": 29.8935, "maxx": -84.3436, "maxy": 29.904}, {"beach": "Phipps Preserve Beach", "minx": -84.4414, "miny": 29.904, "maxx": -84.424, "maxy": 29.9176}, {"beach": "Dog Island", "minx": -84.6746, "miny": 29.7779, "maxx": -84.5713, "maxy": 29.8315}, {"beach": "Carrabelle", "minx": -84.762, "miny": 29.7874, "maxx": -84.6746, "maxy": 29.8327}, {"beach": "St. George Island SP", "minx": -84.7968, "miny": 29.6826, "maxx": -84.6915, "maxy": 29.7711}, {"beach": "St. George Island", "minx": -84.9578, "miny": 29.6129, "maxx": -84.7968, "maxy": 29.6826}, {"beach": "Cape St. George", "minx": -85.0985, "miny": 29.5872, "maxx": -84.9593, "maxy": 29.6258}, {"beach": "St. Vincent National Wildlife Refuge", "minx": -85.2236, "miny": 29.63, "maxx": -85.0939, "maxy": 29.6812}, {"beach": "Cape San Blas", "minx": -85.3339, "miny": 29.6761, "maxx": -85.2223, "maxy": 29.6842}, {"beach": "Cape San Blas (AFB)", "minx": -85.3631, "miny": 29.6665, "maxx": -85.3339, "maxy": 29.6765}, {"beach": "St. Joseph Peninsula", "minx": -85.4047, "miny": 29.6765, "maxx": -85.3631, "maxy": 29.7642}, {"beach": "St. Joseph Peninsula State Park", "minx": -85.4171, "miny": 29.7642, "maxx": -85.3847, "maxy": 29.8785}, {"beach": "St. Joe Beach", "minx": -85.3894, "miny": 29.8505, "maxx": -85.337, "maxy": 29.9249}, {"beach": "Mexico Beach", "minx": -85.449, "miny": 29.9249, "maxx": -85.3893, "maxy": 29.9555}, {"beach": "Tyndall Air Force Base", "minx": -85.6875, "miny": 29.9555, "maxx": -85.449, "maxy": 30.0925}, {"beach": "Saint Andrews State Park", "minx": -85.7455, "miny": 30.0925, "maxx": -85.6875, "maxy": 30.1332}, {"beach": "Panama City Beach", "minx": -85.9909, "miny": 30.1332, "maxx": -85.7455, "maxy": 30.2671}, {"beach": "Camp Helen State Park", "minx": -85.9959, "miny": 30.2671, "maxx": -85.9909, "maxy": 30.2694}, {"beach": "East (Walton) County Beaches", "minx": -86.0774, "miny": 30.2693, "maxx": -85.996, "maxy": 30.2991}, {"beach": "Middle (Walton) County Beaches", "minx": -86.1462, "miny": 30.302, "maxx": -86.0849, "maxy": 30.3212}, {"beach": "West (Walton) County Beaches", "minx": -86.2645, "miny": 30.3317, "maxx": -86.1799, "maxy": 30.3552}, {"beach": "Miramar Beach", "minx": -86.3974, "miny": 30.3667, "maxx": -86.3172, "maxy": 30.3788}, {"beach": "Deer Lake State Park", "minx": -86.0849, "miny": 30.2991, "maxx": -86.0774, "maxy": 30.302}, {"beach": "Grayton Beach State Park", "minx": -86.1799, "miny": 30.3212, "maxx": -86.1462, "maxy": 30.3317}, {"beach": "Topsail Hill State Park", "minx": -86.3172, "miny": 30.3552, "maxx": -86.2645, "maxy": 30.3667}, {"beach": "East (Okaloosa) County Beaches", "minx": -86.4326, "miny": 30.3788, "maxx": -86.3974, "maxy": 30.3823}, {"beach": "Mid (Okaloosa) County Beaches", "minx": -86.5071, "miny": 30.3817, "maxx": -86.4536, "maxy": 30.3839}, {"beach": "West (Okaloosa) County Beaches", "minx": -86.6332, "miny": 30.3927, "maxx": -86.5828, "maxy": 30.3965}, {"beach": "Henderson Beach State Park", "minx": -86.4536, "miny": 30.3823, "maxx": -86.4326, "maxy": 30.3834}, {"beach": "Eglin Air Force Base (Okaloosa - East)", "minx": -86.5828, "miny": 30.3857, "maxx": -86.5147, "maxy": 30.3928}, {"beach": "Eglin Air Force Base (Okaloosa - West)", "minx": -86.7995, "miny": 30.3868, "maxx": -86.6332, "maxy": 30.3968}, {"beach": "Eglin Air Force Base (Santa Rosa County)", "minx": -86.8494, "miny": 30.3813, "maxx": -86.7995, "maxy": 30.3868}, {"beach": "Navarre Beach", "minx": -86.9187, "miny": 30.371, "maxx": -86.8494, "maxy": 30.3813}, {"beach": "Gulf Islands National Seashore (Santa Rosa Island)", "minx": -87.0531, "miny": 30.3472, "maxx": -86.9187, "maxy": 30.371}, {"beach": "Pensacola Beach", "minx": -87.1811, "miny": 30.3245, "maxx": -87.0531, "maxy": 30.3472}, {"beach": "Perdido Key", "minx": -87.5185, "miny": 30.2799, "maxx": -87.4196, "maxy": 30.2976}, {"beach": "Perdido Key State Park", "minx": -87.4799, "miny": 30.2876, "maxx": -87.4531, "maxy": 30.2926}, {"beach": "Gulf Islands National Seashore (Fort Pickens)", "minx": -87.3032, "miny": 30.3163, "maxx": -87.1811, "maxy": 30.331}, {"beach": "Gulf Islands National Seashore (Perdido Key)", "minx": -87.4196, "miny": 30.2976, "maxx": -87.312, "maxy": 30.326}, {"beach": "Egmont Key", "minx": -82.7646, "miny": 27.5761, "maxx": -82.7562, "maxy": 27.6029}, {"beach": "Siesta Key", "minx": -82.5698, "miny": 27.2462, "maxx": -82.5359, "maxy": 27.2789}];
+const META   = [{"label": "January 2011", "path": "../json/catalog_January_2011.json", "total_particles": 14465, "frozen_count": 10429, "frozen_in_nesting_count": 255}];
+
+// ── Colour scale: low→high MPW ──────────────────────────────────────────
+const MPW_PALETTE = [
+    [0.00, [26,  42, 10]],
+    [0.25, [74, 106, 21]],
+    [0.50, [137,155, 47]],
+    [0.75, [184,204, 63]],
+    [1.00, [221,240, 96]],
+];
+
+function scaleColor(t) {
+    t = Math.max(0, Math.min(1, t));
+    let i = 0;
+    for (let s = 1; s < MPW_PALETTE.length; s++) {
+        if (t <= MPW_PALETTE[s][0]) { i = s-1; break; }
+        if (s === MPW_PALETTE.length-1) i = s-1;
+    }
+    const [t0,c0] = MPW_PALETTE[i], [t1,c1] = MPW_PALETTE[i+1];
+    const f = (t-t0)/(t1-t0);
+    const r = Math.round(c0[0]+f*(c1[0]-c0[0]));
+    const g = Math.round(c0[1]+f*(c1[1]-c0[1]));
+    const b = Math.round(c0[2]+f*(c1[2]-c0[2]));
+    return `rgb(${r},${g},${b})`;
+}
+
+// ── Build lookup maps ────────────────────────────────────────────────────
+const maxMpw    = Math.max(...STATS.map(s => s.mpw_total), 0.001);
+const maxCount  = Math.max(...STATS.map(s => s.count), 1);
+const statsByBeach = {};
+STATS.forEach(s => { statsByBeach[s.beach] = s; });
+
+// ── Colorbar ticks ───────────────────────────────────────────────────────
+const ticks = [0, 0.25, 0.5, 0.75, 1.0].map(t => (t * maxMpw).toFixed(3));
+document.getElementById('cbTicks').innerHTML = ticks.map(v => `<span>${v}</span>`).join('');
+
+// ── Map ──────────────────────────────────────────────────────────────────
+const map = L.map('map', {zoomControl:true, preferCanvas:true}).setView([26, -79], 6);
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
+    {attribution:''}).addTo(map);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
+    {attribution:'', pane:'overlayPane', zIndex:650}).addTo(map);
+
+// Draw nesting cell rectangles
+const cellLayers = {};   // beach -> Leaflet layer
+
+CELLS.forEach(cell => {
+    const s   = statsByBeach[cell.beach] || null;
+    const t   = s ? s.mpw_total / maxMpw : 0;
+    const col = scaleColor(t);
+    const opacity = s ? 0.35 + 0.5 * t : 0.12;
+
+    const tooltip = s
+        ? `<b>${cell.beach}</b><br>` +
+          `MPW: <b>${s.mpw_total} t</b><br>` +
+          `Particles: <b>${s.count}</b><br>` +
+          `Mean MPW: ${s.mpw_mean} t<br>` +
+          `Mean drift: ${s.dur_mean} days`
+        : `<b>${cell.beach}</b><br><span style="color:#7a8a7d">No arrivals</span>`;
+
+    const rect = L.rectangle(
+        [[cell.miny, cell.minx],[cell.maxy, cell.maxx]],
+        {
+            color:       col,
+            fillColor:   col,
+            fillOpacity: opacity,
+            weight:      s ? 1.5 : 0.5,
+        }
+    )
+    .bindTooltip(tooltip, {className:'leaflet-tooltip-own', sticky:true})
+    .on('click', () => { if (s) selectBeach(s.beach); })
+    .addTo(map);
+
+    cellLayers[cell.beach] = rect;
+});
+
+// ── Chart ────────────────────────────────────────────────────────────────
+let chartMode    = 'mpw';
+let activeBeach  = null;
+
+function setMode(mode) {
+    chartMode = mode;
+    document.getElementById('btnMpw').classList.toggle('active',   mode==='mpw');
+    document.getElementById('btnCount').classList.toggle('active', mode==='count');
+    renderChart();
+}
+
+function renderChart() {
+    const wrap   = document.getElementById('chart-wrap');
+    const sorted = [...STATS].sort((a,b) =>
+        chartMode === 'mpw' ? b.mpw_total - a.mpw_total : b.count - a.count
+    );
+    const maxVal = chartMode === 'mpw' ? maxMpw : maxCount;
+
+    wrap.innerHTML = sorted.map((s, i) => {
+        const pct    = (s[chartMode === 'mpw' ? 'mpw_total' : 'count'] / maxVal * 100).toFixed(1);
+        const isMpw  = chartMode === 'mpw';
+        const val    = isMpw ? `${s.mpw_total} t` : `${s.count} particles`;
+        const sub    = isMpw
+            ? `${s.count} particles · mean ${s.mpw_mean} t · ${s.dur_mean} d drift`
+            : `${s.mpw_total} t total · mean ${s.dur_mean} d · ${s.dist_mean} km`;
+        const isActive = s.beach === activeBeach ? ' active' : '';
+        return `
+        <div class="bar-row${isActive}" id="bar-${i}" onclick="selectBeach('${s.beach.replace(/'/g,"\'")}')">
+            <div class="bar-name">${s.beach}</div>
+            <div class="bar-sub">${sub}</div>
+            <div class="bar-track">
+                <div class="${isMpw ? 'bar-fill-mpw' : 'bar-fill-count'}" style="width:${pct}%"></div>
+            </div>
+            <div class="bar-labels">
+                <div class="bar-val${isMpw ? '' : ' blue'}">${val}</div>
+                <div class="bar-val" style="color:var(--muted)">#${i+1}</div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function selectBeach(beach) {
+    activeBeach = beach;
+    renderChart();
+
+    // Scroll chart row into view
+    const rows = document.querySelectorAll('.bar-row');
+    rows.forEach(r => {
+        if (r.querySelector('.bar-name') && r.querySelector('.bar-name').textContent === beach) {
+            r.scrollIntoView({behavior:'smooth', block:'nearest'});
+        }
+    });
+
+    // Highlight map cell
+    Object.entries(cellLayers).forEach(([b, layer]) => {
+        const s = statsByBeach[b];
+        const t = s ? s.mpw_total / maxMpw : 0;
+        if (b === beach) {
+            layer.setStyle({weight:3, color:'#ddf060', fillOpacity: 0.75});
+            layer.bringToFront();
+        } else {
+            const col = scaleColor(t);
+            layer.setStyle({weight: s ? 1.5 : 0.5, color:col, fillColor:col, fillOpacity: s ? 0.35+0.5*t : 0.12});
+        }
+    });
+
+    // Fly to cell
+    const cell = CELLS.find(c => c.beach === beach);
+    if (cell) {
+        map.flyToBounds(
+            [[cell.miny, cell.minx],[cell.maxy, cell.maxx]],
+            {maxZoom:9, duration:0.6, padding:[40,40]}
+        );
+    }
+}
+
+renderChart();
+</script>
+</body>
+</html>

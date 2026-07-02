@@ -1,0 +1,1 @@
+(function(){if(!window._FLORIDA_DATA)window._FLORIDA_DATA={};window._FLORIDA_DATA['stoch']={"particles":[],"stats":{}};window._FLORIDA_DATA['stoch']._fully_loaded=true;})();

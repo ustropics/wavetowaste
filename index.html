@@ -147,7 +147,8 @@
   .toggle-compact input:checked + .toggle-track-sm::after { background: #fff; left: 14px; }
   .toggle-compact-label { font-size: 11px; font-weight: 500; line-height: 1.3; }
   #gmuLegend { display: none; flex-wrap: wrap; gap: 4px; margin-top: 6px; padding: 0 2px; }
-  .gmu-swatch { font-size: 10px; font-weight: 700; color: #fff; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.3px; }
+  .gmu-swatch { font-size: 10px; font-weight: 700; color: #fff; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.3px; cursor: pointer; }
+  .gmu-swatch:hover { opacity: 0.8; }
 
   .slider-group { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); }
   .slider-row { margin-bottom: 10px; }
@@ -306,6 +307,7 @@
   }
   .pnl-close:hover { background: rgba(255,107,107,0.15); color: #ff6b6b; border-color: rgba(255,107,107,0.3); }
   #gmuPanelHeader .pnl-close { color: #fff; border-color: rgba(255,255,255,0.4); }
+  #beachPanelHeader .pnl-close { color: #fff; border-color: rgba(255,255,255,0.4); }
   #pnlBody { padding: 10px 14px 16px; }
   #pnlBody .popup-content { font-size: 12px; }
 
@@ -329,24 +331,68 @@
     flex-shrink: 0;
   }
   #gmuPanelTitle { font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.3px; }
-  #gmuPanelTabs { display: flex; gap: 4px; padding: 0 12px 8px; flex-shrink: 0; }
-  .gmu-tab-btn {
-    flex: 1; padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: 600;
-    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09);
-    color: var(--text-secondary); cursor: pointer; transition: all 0.15s;
-  }
-  .gmu-tab-btn:hover { background: var(--accent-dim); color: var(--accent); }
-  .gmu-tab-btn.active { background: var(--accent-dim); border-color: rgba(0, 136, 122, 0.45); color: var(--accent); }
+  #gmuPanelTabs { display: flex; gap: 4px; padding: 6px 12px 8px; flex-shrink: 0; }
+  #gmuOriginTable { width: 100%; border-collapse: collapse; font-size: 11px; }
+  #gmuOriginTable th { text-align: left; color: var(--text-secondary); font-weight: 600; padding: 3px 4px 5px; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; }
+  #gmuOriginTable th:last-child, #gmuOriginTable td:last-child { text-align: right; }
+  #gmuOriginTable th:nth-child(2), #gmuOriginTable td:nth-child(2) { text-align: right; }
+  #gmuOriginTable td { padding: 4px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--text-primary); }
+  #gmuOriginTable tr:last-child td { border-bottom: none; }
   #gmuPanelBody { padding: 12px 14px 14px; overflow-y: auto; flex: 1; }
-  #gmuPanelStats, #gmuSourceStats { display: flex; gap: 12px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  #gmuPanelStats { display: flex; gap: 12px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.07); }
   .gmu-stat { display: flex; flex-direction: column; gap: 2px; }
   .gmu-stat-val { font-size: 14px; font-weight: 700; color: var(--text-primary); }
   .gmu-stat-lbl { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.4px; }
-  #gmuBeachTable, #gmuRegionTable { width: 100%; border-collapse: collapse; font-size: 11px; }
-  #gmuBeachTable th, #gmuRegionTable th { text-align: left; color: var(--text-secondary); font-weight: 600; padding: 3px 4px 5px; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; }
-  #gmuBeachTable td, #gmuRegionTable td { padding: 4px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--text-primary); vertical-align: middle; }
-  #gmuBeachTable tr:last-child td, #gmuRegionTable tr:last-child td { border-bottom: none; }
-  #gmuBeachTable tr:hover td, #gmuRegionTable tr:hover td { background: rgba(255,255,255,0.03); }
+  #gmuBeachTable { width: 100%; border-collapse: collapse; font-size: 11px; }
+  #gmuBeachTable th { text-align: left; color: var(--text-secondary); font-weight: 600; padding: 3px 4px 5px; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; }
+  #gmuBeachTable td { padding: 4px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--text-primary); vertical-align: middle; }
+  #gmuBeachTable tr:last-child td { border-bottom: none; }
+  #gmuBeachTable tr:hover td { background: rgba(255,255,255,0.03); }
+  #beachPanel {
+    position: fixed; top: calc(var(--navbar-h) + 16px); right: 16px; z-index: 998;
+    width: 280px; max-height: calc(100vh - var(--navbar-h) - 32px);
+    background: var(--bg-panel-alpha);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;
+    box-shadow: var(--shadow);
+    transform: translateX(calc(100% + 32px));
+    transition: transform 0.3s cubic-bezier(0.32, 0, 0.68, 1);
+    pointer-events: none;
+    display: flex; flex-direction: column;
+  }
+  #beachPanel.visible { transform: translateX(0); pointer-events: auto; }
+  #beachPanel.from-gmu { right: calc(16px + 280px + 12px); }
+  .gmu-beach-row { cursor: pointer; }
+  .gmu-beach-row:hover td { background: rgba(255,255,255,0.06) !important; }
+  .gmu-beach-row.selected td { background: rgba(255,255,255,0.12) !important; color: var(--text-primary); }
+  #beachPanelHeader {
+    padding: 10px 12px; border-radius: 12px 12px 0 0; background: #6b9ac4;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  #beachPanelTitle { font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.3px; }
+  #beachPanelTabs { display: flex; gap: 4px; padding: 6px 12px 8px; background: #6b9ac4; flex-shrink: 0; }
+  .beach-tab-btn { flex: 1; padding: 4px 10px; border-radius: 5px; font-size: 11px; font-weight: 600; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: rgba(255,255,255,0.75); cursor: pointer; transition: all 0.15s; }
+  .beach-tab-btn.active { background: rgba(255,255,255,0.9); border-color: transparent; color: #6b9ac4; }
+  .beach-tab-btn:hover:not(.active) { background: rgba(255,255,255,0.28); }
+  #beachPanelBody { padding: 12px 14px 14px; overflow-y: auto; flex: 1; }
+  #beachOriginTable { width: 100%; border-collapse: collapse; font-size: 11px; }
+  #beachOriginTable th { text-align: left; color: var(--text-secondary); font-weight: 600; padding: 3px 4px 5px; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; }
+  #beachOriginTable th:last-child, #beachOriginTable td:last-child { text-align: right; }
+  #beachOriginTable th:nth-child(2), #beachOriginTable td:nth-child(2) { text-align: right; }
+  #beachOriginTable td { padding: 4px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--text-primary); font-size: 11px; }
+  #beachOriginTable tr:last-child td { border-bottom: none; }
+  #beachPanelStats { display: flex; gap: 12px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  #beachPanelTurtle { font-size: 11px; color: var(--text-secondary); margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.07); line-height: 1.7; }
+  #beachYearTable { width: 100%; border-collapse: collapse; font-size: 11px; }
+  #beachYearTable th { text-align: left; color: var(--text-secondary); font-weight: 600; padding: 3px 4px 5px; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; }
+  #beachYearTable th:last-child, #beachYearTable td:last-child { text-align: right; }
+  #beachYearTable th:nth-child(2), #beachYearTable td:nth-child(2) { text-align: right; }
+  #beachYearTable td { padding: 4px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--text-primary); }
+  #beachYearTable tr:last-child td { border-bottom: none; }
+  .bz-btn { font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
+  .bz-btn.active { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.3); color: var(--text-primary); }
+  .bz-btn:hover { background: rgba(255,255,255,0.14); }
 
   /* ── Custom zoom controls ────────────────────────────────────── */
   #zoomControls {
@@ -502,14 +548,14 @@
     }
     .panel-body { -webkit-overflow-scrolling: touch; }
 
-    /* Particle panel + GMU panel — bottom sheet on mobile */
-    #particlePanel, #gmuPanel {
+    /* Particle panel + GMU panel + Beach panel — bottom sheet on mobile */
+    #particlePanel, #gmuPanel, #beachPanel {
       top: auto !important; right: 0 !important; left: 0 !important; bottom: 0 !important;
       width: 100% !important; max-height: 65dvh !important;
       border-radius: 16px 16px 0 0 !important;
       transform: translateY(calc(100% + 4px)) !important;
     }
-    #particlePanel.visible, #gmuPanel.visible { transform: translateY(0) !important; }
+    #particlePanel.visible, #gmuPanel.visible, #beachPanel.visible { transform: translateY(0) !important; }
 
     /* Hide custom zoom (use pinch on mobile) */
     #zoomControls { display: none !important; }
@@ -755,11 +801,11 @@
     <button class="pnl-close" onclick="closeGmuPanel()" title="Close">&#x2715;</button>
   </div>
   <div id="gmuPanelTabs">
-    <button class="gmu-tab-btn active" id="gmuTabEnding" onclick="switchGmuTab('ending')">Ending</button>
-    <button class="gmu-tab-btn" id="gmuTabStarting" onclick="switchGmuTab('starting')">Starting</button>
+    <button class="beach-tab-btn active" id="gmuTabBeaches" onclick="switchGmuTab('beaches')">Beaches</button>
+    <button class="beach-tab-btn" id="gmuTabOrigin" onclick="switchGmuTab('origin')">Origin</button>
   </div>
   <div id="gmuPanelBody">
-    <div id="gmuEndingContent">
+    <div id="gmuBeachesContent">
       <div id="gmuPanelStats"></div>
       <table id="gmuBeachTable">
         <thead>
@@ -772,14 +818,53 @@
         <tbody></tbody>
       </table>
     </div>
-    <div id="gmuStartingContent" style="display:none;">
-      <div id="gmuSourceStats"></div>
-      <table id="gmuRegionTable">
+    <div id="gmuOriginContent" style="display:none;">
+      <table id="gmuOriginTable">
         <thead>
           <tr>
-            <th>Region</th>
-            <th style="text-align:right">Particles</th>
-            <th style="text-align:right">MPW (t)</th>
+            <th>Country / Region</th>
+            <th>Particles</th>
+            <th>MPW (t)</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── Beach info panel ─────────────────────────────────────────────────── -->
+<div id="beachPanel">
+  <div id="beachPanelHeader">
+    <span id="beachPanelTitle">Beach</span>
+    <button class="pnl-close" onclick="closeBeachPanel()" title="Close">&#x2715;</button>
+  </div>
+  <div id="beachPanelTabs">
+    <button class="beach-tab-btn active" id="beachTabStats" onclick="switchBeachTab('stats')">Stats</button>
+    <button class="beach-tab-btn" id="beachTabOrigin" onclick="switchBeachTab('origin')">Origin</button>
+  </div>
+  <div id="beachPanelBody">
+    <div id="beachStatsContent">
+      <div id="beachPanelStats"></div>
+      <div id="beachPanelTurtle"></div>
+      <table id="beachYearTable">
+        <thead>
+          <tr>
+            <th>Year</th>
+            <th>Particles</th>
+            <th>MPW (t)</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div id="beachOriginContent" style="display:none;">
+      <table id="beachOriginTable">
+        <thead>
+          <tr>
+            <th>Country / Region</th>
+            <th>Particles</th>
+            <th>MPW (t)</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -852,15 +937,24 @@
         <label class="toggle-compact"><input type="checkbox" id="togNestingZones"><span class="toggle-track-sm"></span><span class="toggle-compact-label">Nesting Zones</span></label>
         <label class="toggle-compact"><input type="checkbox" id="togStartPts" onchange="rebuildStartPoints()"><span class="toggle-track-sm"></span><span class="toggle-compact-label">Start Points</span></label>
         <label class="toggle-compact"><input type="checkbox" id="togGmuZones" checked><span class="toggle-track-sm"></span><span class="toggle-compact-label">GMU Zones</span></label>
+        <label class="toggle-compact"><input type="checkbox" id="togBeachZones"><span class="toggle-track-sm"></span><span class="toggle-compact-label">Beach Zones</span></label>
+        <div id="beachZonesControls" style="display:none;grid-column:1/-1;align-items:center;gap:5px;font-size:10px;color:var(--text-secondary);margin-top:-2px;">
+          <span>Size:</span>
+          <button class="bz-btn active" id="btnBeachMpw" onclick="setBeachMetric('mpw')">MPW</button>
+          <button class="bz-btn" id="btnBeachCount" onclick="setBeachMetric('count')">Count</button>
+          <span style="margin-left:2px">Color:</span>
+          <button class="bz-btn active" id="btnBeachCc" onclick="setBeachSpecies('cc')">Cc</button>
+          <button class="bz-btn" id="btnBeachCm" onclick="setBeachSpecies('cm')">Cm</button>
+        </div>
       </div>
       <div id="gmuLegend">
-        <span class="gmu-swatch" style="background:#e74c3c">NW</span>
-        <span class="gmu-swatch" style="background:#e67e22">NO</span>
-        <span class="gmu-swatch" style="background:#f1c40f;color:#222">CE</span>
-        <span class="gmu-swatch" style="background:#2ecc71;color:#222">CW</span>
-        <span class="gmu-swatch" style="background:#3498db">DT</span>
-        <span class="gmu-swatch" style="background:#9b59b6">SE</span>
-        <span class="gmu-swatch" style="background:#e91e8c">SW</span>
+        <span class="gmu-swatch" style="background:#e74c3c" onclick="openGmuPanel('NW')">NW</span>
+        <span class="gmu-swatch" style="background:#e67e22" onclick="openGmuPanel('NO')">NO</span>
+        <span class="gmu-swatch" style="background:#f1c40f;color:#222" onclick="openGmuPanel('CE')">CE</span>
+        <span class="gmu-swatch" style="background:#2ecc71;color:#222" onclick="openGmuPanel('CW')">CW</span>
+        <span class="gmu-swatch" style="background:#3498db" onclick="openGmuPanel('DT')">DT</span>
+        <span class="gmu-swatch" style="background:#9b59b6" onclick="openGmuPanel('SE')">SE</span>
+        <span class="gmu-swatch" style="background:#e91e8c" onclick="openGmuPanel('SW')">SW</span>
       </div>
     </div>
     <div class="layer-section">
@@ -922,7 +1016,7 @@
 
 <script>
 // ── Data loading ───────────────────────────────────────────────────────────
-window._BEACH_COMPARE_DATA = [];
+window._BEACH_COMPARE_DATA = [{"beach":"Alligator Point","mc_count":99,"mc_mpw":45.4168,"stoch_count":138,"stoch_mpw":57.2174},{"beach":"Amelia Island","mc_count":173,"mc_mpw":117.6794,"stoch_count":124,"stoch_mpw":71.0684},{"beach":"Amelia Island State Park","mc_count":20,"mc_mpw":11.3192,"stoch_count":31,"stoch_mpw":19.3516},{"beach":"Anastasia State Park","mc_count":125,"mc_mpw":92.3574,"stoch_count":156,"stoch_mpw":102.2136},{"beach":"Anclote Key State Park","mc_count":11,"mc_mpw":11.7463,"stoch_count":140,"stoch_mpw":156.1777},{"beach":"Anna Maria Island","mc_count":147,"mc_mpw":109.1482,"stoch_count":232,"stoch_mpw":179.4603},{"beach":"Avalon State Park","mc_count":40,"mc_mpw":45.7024,"stoch_count":84,"stoch_mpw":69.4307},{"beach":"Bahia Honda State Park","mc_count":16,"mc_mpw":15.5252,"stoch_count":26,"stoch_mpw":22.6609},{"beach":"Bald Point State Park","mc_count":183,"mc_mpw":81.2438,"stoch_count":54,"stoch_mpw":22.9123},{"beach":"Barefoot Beach Preserve","mc_count":7,"mc_mpw":3.872,"stoch_count":16,"stoch_mpw":9.4313},{"beach":"Beach Club Drive (North)","mc_count":24,"mc_mpw":15.8382,"stoch_count":57,"stoch_mpw":49.4158},{"beach":"Beach Club Drive (South)","mc_count":97,"mc_mpw":82.7508,"stoch_count":144,"stoch_mpw":109.6151},{"beach":"Big Hickory Island","mc_count":5,"mc_mpw":3.1424,"stoch_count":3,"stoch_mpw":2.0359},{"beach":"Big Pine Key","mc_count":119,"mc_mpw":140.6065,"stoch_count":40,"stoch_mpw":45.2351},{"beach":"Biscayne National Park","mc_count":225,"mc_mpw":244.9883,"stoch_count":29,"stoch_mpw":25.5812},{"beach":"Boca Chica Key","mc_count":110,"mc_mpw":153.2862,"stoch_count":21,"stoch_mpw":24.5334},{"beach":"Boca Grande Key","mc_count":22,"mc_mpw":25.3788,"stoch_count":6,"stoch_mpw":7.9549},{"beach":"Boca Raton Beaches","mc_count":177,"mc_mpw":177.9717,"stoch_count":145,"stoch_mpw":132.0588},{"beach":"Bonita Beach","mc_count":14,"mc_mpw":7.9651,"stoch_count":21,"stoch_mpw":11.9191},{"beach":"Breakers","mc_count":17,"mc_mpw":15.3794,"stoch_count":18,"stoch_mpw":15.758},{"beach":"Bunche Beach","mc_count":1,"mc_mpw":0.3474,"stoch_count":0,"stoch_mpw":0.0},{"beach":"Cabbage/Shell Key","mc_count":57,"mc_mpw":57.1863,"stoch_count":84,"stoch_mpw":55.9811},{"beach":"Caladesi Island State Park","mc_count":57,"mc_mpw":42.1512,"stoch_count":60,"stoch_mpw":49.4795},{"beach":"Camp Helen State Park","mc_count":54,"mc_mpw":46.8874,"stoch_count":33,"stoch_mpw":23.9364},{"beach":"Canaveral Air Force Station","mc_count":650,"mc_mpw":589.0474,"stoch_count":331,"stoch_mpw":320.2714},{"beach":"Canaveral National Seashore","mc_count":378,"mc_mpw":276.1857,"stoch_count":166,"stoch_mpw":132.8141},{"beach":"Canaveral National Seashore (Volusia County)","mc_count":288,"mc_mpw":243.9995,"stoch_count":161,"stoch_mpw":132.2207},{"beach":"Cape Florida State Park","mc_count":131,"mc_mpw":159.8586,"stoch_count":114,"stoch_mpw":179.3835},{"beach":"Cape Romano","mc_count":7,"mc_mpw":3.0144,"stoch_count":17,"stoch_mpw":9.5547},{"beach":"Cape San Blas","mc_count":196,"mc_mpw":120.1969,"stoch_count":128,"stoch_mpw":76.2295},{"beach":"Cape San Blas (AFB)","mc_count":26,"mc_mpw":21.7995,"stoch_count":14,"stoch_mpw":16.3423},{"beach":"Cape St. George","mc_count":41,"mc_mpw":25.091,"stoch_count":28,"stoch_mpw":19.1613},{"beach":"Captiva Island","mc_count":32,"mc_mpw":18.0006,"stoch_count":40,"stoch_mpw":25.9166},{"beach":"Carrabelle","mc_count":213,"mc_mpw":96.2528,"stoch_count":95,"stoch_mpw":50.244},{"beach":"Casey Key","mc_count":78,"mc_mpw":60.1082,"stoch_count":113,"stoch_mpw":91.0269},{"beach":"Cayo Costa State Park","mc_count":86,"mc_mpw":61.6055,"stoch_count":88,"stoch_mpw":69.9492},{"beach":"Central Brevard County","mc_count":869,"mc_mpw":841.4415,"stoch_count":579,"stoch_mpw":566.9348},{"beach":"Clam Pass Park","mc_count":4,"mc_mpw":1.4874,"stoch_count":5,"stoch_mpw":2.0584},{"beach":"Clarence Higgs Beach (Key West)","mc_count":9,"mc_mpw":12.9563,"stoch_count":3,"stoch_mpw":2.7243},{"beach":"Cocoa Beach","mc_count":413,"mc_mpw":388.5411,"stoch_count":205,"stoch_mpw":192.9147},{"beach":"Coral Cove Park","mc_count":30,"mc_mpw":43.0823,"stoch_count":22,"stoch_mpw":28.1132},{"beach":"Deer Lake State Park","mc_count":4,"mc_mpw":1.4875,"stoch_count":4,"stoch_mpw":4.3097},{"beach":"Deerfield/Hillsboro Beach","mc_count":80,"mc_mpw":86.4979,"stoch_count":81,"stoch_mpw":76.7853},{"beach":"Delray Beach","mc_count":159,"mc_mpw":161.0864,"stoch_count":62,"stoch_mpw":57.0164},{"beach":"Dog Island","mc_count":148,"mc_mpw":96.8382,"stoch_count":82,"stoch_mpw":43.7284},{"beach":"Don Pedro Island","mc_count":60,"mc_mpw":40.1408,"stoch_count":64,"stoch_mpw":48.0336},{"beach":"Don Pedro State Park","mc_count":30,"mc_mpw":26.6432,"stoch_count":41,"stoch_mpw":26.0917},{"beach":"Dry Tortugas - Bush Key","mc_count":22,"mc_mpw":23.3912,"stoch_count":9,"stoch_mpw":7.6746},{"beach":"Dry Tortugas - East Key","mc_count":72,"mc_mpw":82.3827,"stoch_count":32,"stoch_mpw":28.3724},{"beach":"Dry Tortugas - Garden Key","mc_count":27,"mc_mpw":30.8365,"stoch_count":12,"stoch_mpw":11.8318},{"beach":"Dry Tortugas - Loggerhead Key","mc_count":87,"mc_mpw":76.9241,"stoch_count":34,"stoch_mpw":23.1941},{"beach":"Dry Tortugas - Long Key","mc_count":31,"mc_mpw":29.358,"stoch_count":12,"stoch_mpw":5.4137},{"beach":"Dry Tortugas - Middle Key","mc_count":47,"mc_mpw":55.1838,"stoch_count":14,"stoch_mpw":7.2963},{"beach":"ENP - Cape Sable (North)","mc_count":6,"mc_mpw":7.0932,"stoch_count":11,"stoch_mpw":16.3827},{"beach":"ENP - Cape Sable (South)","mc_count":24,"mc_mpw":27.7897,"stoch_count":36,"stoch_mpw":40.4537},{"beach":"East (Okaloosa) County Beaches","mc_count":58,"mc_mpw":48.0136,"stoch_count":19,"stoch_mpw":22.8846},{"beach":"East (Walton) County Beaches","mc_count":651,"mc_mpw":496.9559,"stoch_count":305,"stoch_mpw":209.4328},{"beach":"Eglin Air Force Base (Okaloosa - East)","mc_count":133,"mc_mpw":112.2923,"stoch_count":177,"stoch_mpw":137.4729},{"beach":"Eglin Air Force Base (Okaloosa - West)","mc_count":606,"mc_mpw":478.8735,"stoch_count":411,"stoch_mpw":330.2051},{"beach":"Eglin Air Force Base (Santa Rosa County)","mc_count":92,"mc_mpw":66.299,"stoch_count":72,"stoch_mpw":54.705},{"beach":"Egmont Key","mc_count":11,"mc_mpw":5.4771,"stoch_count":17,"stoch_mpw":10.0271},{"beach":"Estero Island","mc_count":47,"mc_mpw":35.6601,"stoch_count":52,"stoch_mpw":42.969},{"beach":"Fat Deer Key","mc_count":15,"mc_mpw":13.6433,"stoch_count":4,"stoch_mpw":6.653},{"beach":"Fisher Island","mc_count":35,"mc_mpw":49.1277,"stoch_count":10,"stoch_mpw":13.88},{"beach":"Flagler Beach","mc_count":145,"mc_mpw":112.2591,"stoch_count":121,"stoch_mpw":90.0582},{"beach":"Flagler Beach SP","mc_count":25,"mc_mpw":20.0607,"stoch_count":26,"stoch_mpw":17.0458},{"beach":"Fort Clinch","mc_count":89,"mc_mpw":76.7579,"stoch_count":48,"stoch_mpw":32.5666},{"beach":"Fort Desoto County Park","mc_count":85,"mc_mpw":57.2827,"stoch_count":106,"stoch_mpw":80.415},{"beach":"Fort Lauderdale Beach","mc_count":296,"mc_mpw":324.3045,"stoch_count":86,"stoch_mpw":92.1166},{"beach":"Fort Matanzas (North)","mc_count":179,"mc_mpw":130.9647,"stoch_count":106,"stoch_mpw":80.8811},{"beach":"Fort Matanzas (South)","mc_count":33,"mc_mpw":25.7909,"stoch_count":25,"stoch_mpw":15.5731},{"beach":"Fort Pierce Inlet State Park","mc_count":2,"mc_mpw":1.7225,"stoch_count":0,"stoch_mpw":0.0},{"beach":"Fort Zachary Taylor State Park","mc_count":0,"mc_mpw":0.0,"stoch_count":2,"stoch_mpw":0.9366},{"beach":"Gasparilla Island North (Charlotte County)","mc_count":21,"mc_mpw":11.6028,"stoch_count":76,"stoch_mpw":62.6296},{"beach":"Gasparilla Island South (Lee County)","mc_count":65,"mc_mpw":36.0403,"stoch_count":80,"stoch_mpw":41.4316},{"beach":"Gasparilla Island State Park","mc_count":2,"mc_mpw":1.4112,"stoch_count":5,"stoch_mpw":3.2535},{"beach":"Golden Beach","mc_count":30,"mc_mpw":29.9588,"stoch_count":19,"stoch_mpw":40.1768},{"beach":"Grayton Beach State Park","mc_count":238,"mc_mpw":214.7108,"stoch_count":91,"stoch_mpw":86.3653},{"beach":"Guana River (South)","mc_count":119,"mc_mpw":108.0059,"stoch_count":57,"stoch_mpw":40.5279},{"beach":"Guana Tolomato Matanzas NERR","mc_count":133,"mc_mpw":97.9774,"stoch_count":109,"stoch_mpw":71.9294},{"beach":"Gulf Islands National Seashore (Fort Pickens)","mc_count":297,"mc_mpw":238.9767,"stoch_count":288,"stoch_mpw":232.1469},{"beach":"Gulf Islands National Seashore (Perdido Key)","mc_count":370,"mc_mpw":288.1684,"stoch_count":371,"stoch_mpw":279.3695},{"beach":"Gulf Islands National Seashore (Santa Rosa Island)","mc_count":91,"mc_mpw":85.4534,"stoch_count":126,"stoch_mpw":108.6688},{"beach":"Gulfstream","mc_count":85,"mc_mpw":76.2851,"stoch_count":41,"stoch_mpw":36.7055},{"beach":"Gulfstream Park","mc_count":19,"mc_mpw":15.6785,"stoch_count":6,"stoch_mpw":3.7004},{"beach":"Hanna Park","mc_count":15,"mc_mpw":17.0324,"stoch_count":5,"stoch_mpw":12.1286},{"beach":"Henderson Beach State Park","mc_count":60,"mc_mpw":43.0755,"stoch_count":28,"stoch_mpw":16.7556},{"beach":"Highland Beach","mc_count":182,"mc_mpw":183.1151,"stoch_count":114,"stoch_mpw":112.5033},{"beach":"Hobe Sound NWR","mc_count":483,"mc_mpw":504.7825,"stoch_count":368,"stoch_mpw":367.1235},{"beach":"Hollywood/Hallendale Beach","mc_count":180,"mc_mpw":250.8959,"stoch_count":54,"stoch_mpw":63.3383},{"beach":"Honeymoon Island State Park","mc_count":29,"mc_mpw":24.2896,"stoch_count":104,"stoch_mpw":84.4069},{"beach":"Huguenot Park","mc_count":66,"mc_mpw":57.0934,"stoch_count":39,"stoch_mpw":25.1764},{"beach":"Hutchinson Island","mc_count":186,"mc_mpw":196.8946,"stoch_count":300,"stoch_mpw":322.2482},{"beach":"Hutchinson Island (St. Lucie County)","mc_count":778,"mc_mpw":732.3845,"stoch_count":719,"stoch_mpw":718.437},{"beach":"Indian River Shores","mc_count":70,"mc_mpw":56.7363,"stoch_count":65,"stoch_mpw":49.2771},{"beach":"Indian River Shores (North)","mc_count":11,"mc_mpw":12.5653,"stoch_count":13,"stoch_mpw":11.2659},{"beach":"Jetty Park","mc_count":546,"mc_mpw":488.3967,"stoch_count":330,"stoch_mpw":283.009},{"beach":"John D. MacArthur Beach State Park","mc_count":61,"mc_mpw":53.6138,"stoch_count":24,"stoch_mpw":17.5628},{"beach":"John U. Lloyd State Park","mc_count":62,"mc_mpw":77.7555,"stoch_count":12,"stoch_mpw":11.1618},{"beach":"Jupiter Beach (including Carlin)","mc_count":79,"mc_mpw":85.5474,"stoch_count":69,"stoch_mpw":73.3593},{"beach":"Jupiter Inlet Colony","mc_count":88,"mc_mpw":95.1126,"stoch_count":109,"stoch_mpw":117.1253},{"beach":"Jupiter Island","mc_count":762,"mc_mpw":757.9071,"stoch_count":669,"stoch_mpw":644.1255},{"beach":"Jupiter/Juno Beach","mc_count":232,"mc_mpw":217.1604,"stoch_count":155,"stoch_mpw":151.6636},{"beach":"Keewaydin Island (North)","mc_count":13,"mc_mpw":5.5853,"stoch_count":18,"stoch_mpw":11.8925},{"beach":"Keewaydin Island (South)","mc_count":4,"mc_mpw":2.0042,"stoch_count":7,"stoch_mpw":2.9696},{"beach":"Key Biscayne","mc_count":307,"mc_mpw":414.3674,"stoch_count":85,"stoch_mpw":109.2393},{"beach":"Key Colony Beach","mc_count":10,"mc_mpw":14.8763,"stoch_count":9,"stoch_mpw":3.4258},{"beach":"Kreusler Park","mc_count":5,"mc_mpw":5.1097,"stoch_count":3,"stoch_mpw":1.7445},{"beach":"Lake Worth Inlet","mc_count":56,"mc_mpw":51.0617,"stoch_count":9,"stoch_mpw":13.7598},{"beach":"Lake Worth Municipal Beach","mc_count":14,"mc_mpw":13.1912,"stoch_count":7,"stoch_mpw":9.4445},{"beach":"Lantana","mc_count":22,"mc_mpw":22.9411,"stoch_count":7,"stoch_mpw":8.9136},{"beach":"Lido Key","mc_count":67,"mc_mpw":41.2399,"stoch_count":66,"stoch_mpw":40.9011},{"beach":"Little Crawl Key","mc_count":26,"mc_mpw":38.0552,"stoch_count":5,"stoch_mpw":5.4109},{"beach":"Little Gasparilla Island","mc_count":21,"mc_mpw":10.0216,"stoch_count":24,"stoch_mpw":16.8452},{"beach":"Little Talbot Island State Park","mc_count":136,"mc_mpw":81.8554,"stoch_count":123,"stoch_mpw":77.7402},{"beach":"Long Key (West End)","mc_count":0,"mc_mpw":0.0,"stoch_count":1,"stoch_mpw":0.1159},{"beach":"Long Key State Park","mc_count":32,"mc_mpw":36.7842,"stoch_count":9,"stoch_mpw":7.9608},{"beach":"Longboat Key (North)","mc_count":62,"mc_mpw":45.722,"stoch_count":79,"stoch_mpw":60.7196},{"beach":"Longboat Key (South)","mc_count":106,"mc_mpw":79.2855,"stoch_count":109,"stoch_mpw":95.6455},{"beach":"Lovers Key State Park","mc_count":16,"mc_mpw":6.5157,"stoch_count":10,"stoch_mpw":4.9825},{"beach":"Lower Matecumbe Sea Oats Bch","mc_count":130,"mc_mpw":167.751,"stoch_count":55,"stoch_mpw":67.3809},{"beach":"Manalapan","mc_count":199,"mc_mpw":187.5907,"stoch_count":74,"stoch_mpw":65.7052},{"beach":"Manasota Key","mc_count":20,"mc_mpw":13.5705,"stoch_count":23,"stoch_mpw":16.3232},{"beach":"Manasota Key (Sarasota County)","mc_count":73,"mc_mpw":62.1702,"stoch_count":93,"stoch_mpw":75.4421},{"beach":"Marco Island","mc_count":7,"mc_mpw":3.4633,"stoch_count":24,"stoch_mpw":17.055},{"beach":"Marineland Beach","mc_count":64,"mc_mpw":51.3386,"stoch_count":48,"stoch_mpw":34.4175},{"beach":"Marquesas Keys","mc_count":247,"mc_mpw":293.2667,"stoch_count":76,"stoch_mpw":78.6406},{"beach":"Mayport Naval Air Station","mc_count":25,"mc_mpw":14.6709,"stoch_count":17,"stoch_mpw":9.3149},{"beach":"Merritt Island National Wildlife Refuge","mc_count":151,"mc_mpw":129.1011,"stoch_count":77,"stoch_mpw":68.1133},{"beach":"Mexico Beach","mc_count":104,"mc_mpw":64.368,"stoch_count":91,"stoch_mpw":64.0648},{"beach":"Miami Beaches","mc_count":680,"mc_mpw":880.2058,"stoch_count":239,"stoch_mpw":345.5369},{"beach":"Mid (Okaloosa) County Beaches","mc_count":164,"mc_mpw":132.2565,"stoch_count":97,"stoch_mpw":67.4769},{"beach":"Mid County Beaches","mc_count":133,"mc_mpw":111.9152,"stoch_count":120,"stoch_mpw":95.7763},{"beach":"Middle (Walton) County Beaches","mc_count":211,"mc_mpw":170.268,"stoch_count":237,"stoch_mpw":162.3888},{"beach":"Miramar Beach","mc_count":68,"mc_mpw":51.9863,"stoch_count":49,"stoch_mpw":34.1309},{"beach":"Naples Beach","mc_count":50,"mc_mpw":24.1895,"stoch_count":42,"stoch_mpw":21.5106},{"beach":"Nature Preserve Beach (Key West)","mc_count":10,"mc_mpw":9.1769,"stoch_count":4,"stoch_mpw":2.957},{"beach":"Navarre Beach","mc_count":60,"mc_mpw":48.9932,"stoch_count":102,"stoch_mpw":84.5626},{"beach":"New Smyrna Beach","mc_count":442,"mc_mpw":376.3478,"stoch_count":338,"stoch_mpw":280.802},{"beach":"North Captiva","mc_count":11,"mc_mpw":6.339,"stoch_count":24,"stoch_mpw":16.9013},{"beach":"North Captiva Island (South)","mc_count":2,"mc_mpw":0.7217,"stoch_count":8,"stoch_mpw":4.2564},{"beach":"North Captiva Island State Park","mc_count":2,"mc_mpw":1.3654,"stoch_count":21,"stoch_mpw":12.1493},{"beach":"North County Beaches","mc_count":218,"mc_mpw":169.0045,"stoch_count":257,"stoch_mpw":195.9506},{"beach":"North Flagler County Beaches","mc_count":162,"mc_mpw":135.2264,"stoch_count":126,"stoch_mpw":96.3381},{"beach":"North Peninsula State Park","mc_count":163,"mc_mpw":141.0102,"stoch_count":100,"stoch_mpw":74.9521},{"beach":"North Saint Lucie County Beaches","mc_count":283,"mc_mpw":307.0758,"stoch_count":206,"stoch_mpw":208.2893},{"beach":"Ocean Inlet Park","mc_count":10,"mc_mpw":8.0561,"stoch_count":3,"stoch_mpw":1.9617},{"beach":"Ocean Reef Park","mc_count":8,"mc_mpw":7.1157,"stoch_count":3,"stoch_mpw":3.5043},{"beach":"Ocean Ridge (Boynton)","mc_count":212,"mc_mpw":191.9693,"stoch_count":78,"stoch_mpw":64.2098},{"beach":"Old Ponte Vedra","mc_count":28,"mc_mpw":17.9612,"stoch_count":23,"stoch_mpw":13.5936},{"beach":"Palm Beach (North End)","mc_count":108,"mc_mpw":86.2364,"stoch_count":52,"stoch_mpw":46.9672},{"beach":"Palm Beach (South End)","mc_count":254,"mc_mpw":226.531,"stoch_count":94,"stoch_mpw":80.9086},{"beach":"Palm Beach Shores","mc_count":32,"mc_mpw":30.5024,"stoch_count":20,"stoch_mpw":14.3231},{"beach":"Panama City Beach","mc_count":1412,"mc_mpw":1176.5396,"stoch_count":1035,"stoch_mpw":747.6857},{"beach":"Par III to Kreusler","mc_count":51,"mc_mpw":33.8011,"stoch_count":29,"stoch_mpw":29.2912},{"beach":"Parkshore Beach","mc_count":44,"mc_mpw":18.6624,"stoch_count":24,"stoch_mpw":9.9941},{"beach":"Patio Beach","mc_count":4,"mc_mpw":6.8802,"stoch_count":0,"stoch_mpw":0.0},{"beach":"Patrick Air Force Base","mc_count":84,"mc_mpw":81.5714,"stoch_count":77,"stoch_mpw":66.6064},{"beach":"Pensacola Beach","mc_count":207,"mc_mpw":151.9196,"stoch_count":141,"stoch_mpw":121.6448},{"beach":"Perdido Key","mc_count":325,"mc_mpw":267.1171,"stoch_count":191,"stoch_mpw":137.3532},{"beach":"Perdido Key State Park","mc_count":60,"mc_mpw":46.1265,"stoch_count":40,"stoch_mpw":35.5067},{"beach":"Phipps Preserve Beach","mc_count":7,"mc_mpw":2.7724,"stoch_count":19,"stoch_mpw":8.1982},{"beach":"Pompano/Lauderdale by-the-sea","mc_count":790,"mc_mpw":929.2045,"stoch_count":574,"stoch_mpw":615.6565},{"beach":"Ponte Vedra (North)","mc_count":89,"mc_mpw":66.2592,"stoch_count":58,"stoch_mpw":46.8158},{"beach":"Ponte Vedra (South)","mc_count":165,"mc_mpw":121.7816,"stoch_count":146,"stoch_mpw":98.8623},{"beach":"Residential Beach","mc_count":18,"mc_mpw":18.7849,"stoch_count":8,"stoch_mpw":12.0577},{"beach":"Rest Beach (Key West)","mc_count":7,"mc_mpw":8.5821,"stoch_count":0,"stoch_mpw":0.0},{"beach":"S Duval County Beaches","mc_count":249,"mc_mpw":189.6992,"stoch_count":114,"stoch_mpw":87.4245},{"beach":"Saint Andrews State Park","mc_count":154,"mc_mpw":102.3405,"stoch_count":143,"stoch_mpw":116.3194},{"beach":"Saint Augustine Beach","mc_count":212,"mc_mpw":165.5724,"stoch_count":207,"stoch_mpw":145.6402},{"beach":"Saint Pete Beach","mc_count":138,"mc_mpw":124.3633,"stoch_count":167,"stoch_mpw":142.9416},{"beach":"Sanibel Island (East)","mc_count":103,"mc_mpw":62.5996,"stoch_count":59,"stoch_mpw":34.3922},{"beach":"Sanibel Island (West)","mc_count":132,"mc_mpw":70.3847,"stoch_count":36,"stoch_mpw":23.2631},{"beach":"Sebastian Inlet State Park (Brevard County)","mc_count":53,"mc_mpw":40.5459,"stoch_count":25,"stoch_mpw":20.0993},{"beach":"Sebastian Inlet State Park (Indian River County)","mc_count":69,"mc_mpw":72.9115,"stoch_count":105,"stoch_mpw":112.5712},{"beach":"Siesta Key","mc_count":55,"mc_mpw":41.553,"stoch_count":91,"stoch_mpw":59.3907},{"beach":"Siesta Key (South)","mc_count":34,"mc_mpw":25.0288,"stoch_count":24,"stoch_mpw":22.0285},{"beach":"Singer Island North","mc_count":32,"mc_mpw":27.4643,"stoch_count":22,"stoch_mpw":17.0465},{"beach":"Singer Island South","mc_count":51,"mc_mpw":46.6602,"stoch_count":19,"stoch_mpw":14.8411},{"beach":"Sloans Curve","mc_count":87,"mc_mpw":88.5292,"stoch_count":27,"stoch_mpw":22.2284},{"beach":"Smathers Beach (Key West)","mc_count":114,"mc_mpw":139.8677,"stoch_count":85,"stoch_mpw":106.0918},{"beach":"Sombrero Beach","mc_count":34,"mc_mpw":43.3566,"stoch_count":4,"stoch_mpw":4.6781},{"beach":"South Brevard County","mc_count":267,"mc_mpw":245.9101,"stoch_count":261,"stoch_mpw":202.5188},{"beach":"South Cocoa Beach","mc_count":36,"mc_mpw":35.8191,"stoch_count":41,"stoch_mpw":58.3308},{"beach":"South Flagler County Beaches","mc_count":136,"mc_mpw":107.9494,"stoch_count":77,"stoch_mpw":57.6198},{"beach":"South Indian River County Beaches","mc_count":132,"mc_mpw":133.043,"stoch_count":130,"stoch_mpw":123.1669},{"beach":"South Palm Beach","mc_count":140,"mc_mpw":153.0815,"stoch_count":68,"stoch_mpw":65.8081},{"beach":"St. George Island","mc_count":90,"mc_mpw":58.6451,"stoch_count":43,"stoch_mpw":37.9911},{"beach":"St. George Island SP","mc_count":156,"mc_mpw":100.6614,"stoch_count":110,"stoch_mpw":72.8167},{"beach":"St. Joe Beach","mc_count":74,"mc_mpw":57.4633,"stoch_count":56,"stoch_mpw":35.2702},{"beach":"St. Joseph Peninsula","mc_count":23,"mc_mpw":17.4114,"stoch_count":15,"stoch_mpw":8.0445},{"beach":"St. Joseph Peninsula State Park","mc_count":62,"mc_mpw":35.2979,"stoch_count":69,"stoch_mpw":42.274},{"beach":"St. Lucie Inlet State Park","mc_count":343,"mc_mpw":410.1992,"stoch_count":335,"stoch_mpw":379.229},{"beach":"St. Vincent National Wildlife Refuge","mc_count":262,"mc_mpw":176.8116,"stoch_count":120,"stoch_mpw":80.8805},{"beach":"Stump Pass State Park","mc_count":16,"mc_mpw":10.7442,"stoch_count":40,"stoch_mpw":26.2298},{"beach":"Tequesta Beaches","mc_count":144,"mc_mpw":162.4419,"stoch_count":162,"stoch_mpw":176.2842},{"beach":"Topsail Hill State Park","mc_count":57,"mc_mpw":42.4978,"stoch_count":39,"stoch_mpw":19.0909},{"beach":"Town of Palm Beach (Midtown)","mc_count":142,"mc_mpw":148.0439,"stoch_count":44,"stoch_mpw":44.3253},{"beach":"Tyndall Air Force Base","mc_count":283,"mc_mpw":212.193,"stoch_count":264,"stoch_mpw":204.9618},{"beach":"Upper Matecumbe Key","mc_count":105,"mc_mpw":115.781,"stoch_count":21,"stoch_mpw":16.3477},{"beach":"Vanderbilt Beach","mc_count":23,"mc_mpw":11.186,"stoch_count":18,"stoch_mpw":8.99},{"beach":"Venice Beaches","mc_count":54,"mc_mpw":47.6959,"stoch_count":70,"stoch_mpw":61.4991},{"beach":"Vero Beach","mc_count":90,"mc_mpw":88.0487,"stoch_count":97,"stoch_mpw":95.9665},{"beach":"Vilano Beach","mc_count":83,"mc_mpw":59.905,"stoch_count":131,"stoch_mpw":94.428},{"beach":"Virginia Key","mc_count":191,"mc_mpw":252.1226,"stoch_count":85,"stoch_mpw":114.8872},{"beach":"Volusia County Beaches (North)","mc_count":365,"mc_mpw":315.7436,"stoch_count":324,"stoch_mpw":258.5303},{"beach":"Volusia County Beaches (South)","mc_count":444,"mc_mpw":402.964,"stoch_count":362,"stoch_mpw":314.0852},{"beach":"Wabasso Beach","mc_count":37,"mc_mpw":26.5816,"stoch_count":45,"stoch_mpw":37.8248},{"beach":"Wabasso Beach (South)","mc_count":12,"mc_mpw":13.1943,"stoch_count":13,"stoch_mpw":12.9589},{"beach":"Washington Oaks","mc_count":16,"mc_mpw":14.4304,"stoch_count":17,"stoch_mpw":15.643},{"beach":"West (Okaloosa) County Beaches","mc_count":202,"mc_mpw":165.4068,"stoch_count":115,"stoch_mpw":95.2059},{"beach":"West (Walton) County Beaches","mc_count":236,"mc_mpw":154.1747,"stoch_count":119,"stoch_mpw":83.4237},{"beach":"Wiggins Pass","mc_count":6,"mc_mpw":3.5009,"stoch_count":4,"stoch_mpw":1.5363},{"beach":"Woman Key","mc_count":9,"mc_mpw":6.3468,"stoch_count":0,"stoch_mpw":0.0}];
 if (!window._FLORIDA_DATA) window._FLORIDA_DATA = {};
 const _loadedScripts = new Set();
 
@@ -970,9 +1064,10 @@ let nestingFilter = false;
 let beachFilter   = null;
 let trajFilterBeach = null;  // nesting beach name, or null
 let trajFilterGmu   = null;  // GMU code, or null
+let _currentGmu     = null;  // GMU code of open GMU panel
 let nestingLayer  = null;
 let nestingPolygons = [];
-let regionPolygons = [];
+let regionPolygons  = [];
 
 // ── GMU zones ──────────────────────────────────────────────────────────────
 const GMU_COLORS = {
@@ -1083,9 +1178,13 @@ function getSourceType(slat, slon) {
 const SRC_LABELS = { coastal: 'Coastal Region', river: 'River', outside: 'Outside WCR' };
 const SRC_COLORS = { coastal: '#2ecc71', river: '#3498db', outside: '#e74c3c' };
 
-let gmuLayer = null;
-let _openGmuCode = null;
-let _gmuActiveTab = 'ending';
+let gmuLayer           = null;
+let beachZoneLayer     = null;
+let _selectedBeachName = null;
+
+let beachSizeMetric   = 'mpw';
+let beachColorSpecies = 'cc';
+
 let mpwHeatLayer = null, densityHeatLayer = null, dotsLayer = null, trajLayer = null, startPtsLayer = null;
 let anomalyLayers = { 'mc-det': null, 'mc-stoch': null, 'stoch-det': null };
 const trajSegments = new Map();
@@ -1101,14 +1200,10 @@ let _openPopupParticle = null;
 let _openPopupMarker   = null;
 let _selectedDotKey    = null;
 
-const canvasRenderer = L.canvas({ padding: 0.5, pane: 'trajLinesPane' });
+const canvasRenderer = L.canvas({ padding: 0.5 });
 const map = L.map("map", { center: [27.8, -83.0], zoom: 7, zoomControl: false });
-map.createPane('trajLinesPane');
-map.getPane('trajLinesPane').style.zIndex = 350;  // below default overlayPane (400), so trajectory lines render under GMU/nesting zones
-map.getPane('trajLinesPane').style.pointerEvents = 'none';  // canvas layers cover the whole viewport and would otherwise intercept clicks meant for GMU/nesting zones even where no line is drawn; this layer has no click handlers of its own, so it's safe to remove from hit-testing entirely
 map.createPane('trajDotsPane');
 map.getPane('trajDotsPane').style.zIndex = 650;  // above default overlayPane (400) and markerPane (600), so traj start/end dots always sit on top of GMU/nesting outlines
-map.getPane('trajDotsPane').style.pointerEvents = 'none';  // same reasoning as trajLinesPane -- no click handlers on these dots, must not block clicks on layers below
 const trajDotsRenderer = L.canvas({ padding: 0.5, pane: 'trajDotsPane' });
 
 // ── Basemap ────────────────────────────────────────────────────────────────
@@ -1198,7 +1293,7 @@ async function switchModel(key) {
       allParticles.forEach(p => { if (!('nesting_beach' in p)) p.nesting_beach = nearestNestingBeach(p.lat, p.lon); });
     }
     if (regionPolygons.length > 0) {
-      allParticles.forEach(p => { if (!('start_region' in p)) p.start_region = cachedStartRegion(p.start_lat, p.start_lon); });
+      allParticles.forEach(p => { if (!('start_region' in p)) p.start_region = nearestStartRegion(p.start_lat, p.start_lon); });
     }
     _buildModelIndex(key);
 
@@ -1242,92 +1337,6 @@ function buildNestingIndex() {
   });
 }
 
-const US_STATE_NAMES = new Set();
-function buildRegionIndex() {
-  if (!window._REGIONS_GEOJSON) return;
-  window._REGIONS_GEOJSON.features.forEach(f => { if (f.properties.kind === 'state') US_STATE_NAMES.add(f.properties.name); });
-  regionPolygons = window._REGIONS_GEOJSON.features.map(f => {
-    const g = f.geometry;
-    const polys = g.type === "Polygon" ? [g.coordinates] : g.coordinates;  // MultiPolygon: array of polygons
-    const rings = polys.map(poly => poly[0]);  // exterior ring only, ignore holes (acceptable at 110m resolution)
-    const lats = [], lons = [];
-    rings.forEach(ring => ring.forEach(([lon, lat]) => { lats.push(lat); lons.push(lon); }));
-    return {
-      name: f.properties.name,
-      minLat: Math.min(...lats), maxLat: Math.max(...lats),
-      minLon: Math.min(...lons), maxLon: Math.max(...lons),
-      rings,
-    };
-  });
-}
-
-function _pointInRing(lon, lat, ring) {
-  let inside = false;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const [xi, yi] = ring[i], [xj, yj] = ring[j];
-    if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi)) {
-      inside = !inside;
-    }
-  }
-  return inside;
-}
-
-function _ringMinDistSq(lat, lon, ring) {
-  let best = Infinity;
-  for (let i = 0; i < ring.length - 1; i++) {
-    const [x1, y1] = ring[i], [x2, y2] = ring[i + 1];
-    const dx = x2 - x1, dy = y2 - y1, lenSq = dx * dx + dy * dy;
-    let t = lenSq > 0 ? ((lon - x1) * dx + (lat - y1) * dy) / lenSq : 0;
-    t = Math.max(0, Math.min(1, t));
-    const px = x1 + t * dx, py = y1 + t * dy;
-    const d2 = (lat - py) ** 2 + (lon - px) ** 2;
-    if (d2 < best) best = d2;
-  }
-  return best;
-}
-
-function _bboxDistSq(lat, lon, region) {
-  const dx = Math.max(region.minLon - lon, 0, lon - region.maxLon);
-  const dy = Math.max(region.minLat - lat, 0, lat - region.maxLat);
-  return dx * dx + dy * dy;
-}
-
-function nearestStartRegion(lat, lon) {
-  // 1. Exact containment (rare for ocean particles, but cheap to check first and most accurate when it hits)
-  for (const region of regionPolygons) {
-    if (lat < region.minLat || lat > region.maxLat || lon < region.minLon || lon > region.maxLon) continue;
-    if (region.rings.some(ring => _pointInRing(lon, lat, ring))) return region.name;
-  }
-  // 2. Branch-and-bound nearest-boundary fallback for offshore points: a single pass over all
-  // regions, using a cheap O(1) bbox-distance lower bound to skip the expensive exact ring
-  // distance for any region that can't possibly beat the best answer found so far. Correctness
-  // doesn't depend on visiting regions in any particular order -- only the amount of skipped
-  // work does -- so this avoids allocating and sorting a 228-entry array on every call (measured:
-  // that allocation+sort was the actual bottleneck, not the ring-distance math itself -- in
-  // practice fewer than 2 regions per call ever need the expensive check).
-  let bestName = "", bestDist = Infinity;
-  for (const region of regionPolygons) {
-    const lb = _bboxDistSq(lat, lon, region);
-    if (lb >= bestDist) continue;
-    for (const ring of region.rings) {
-      const d2 = _ringMinDistSq(lat, lon, ring);
-      if (d2 < bestDist) { bestDist = d2; bestName = region.name; }
-    }
-  }
-  return bestName || "Unknown";
-}
-
-const _startRegionCache = new Map();
-function cachedStartRegion(lat, lon) {
-  const key = lat.toFixed(4) + ',' + lon.toFixed(4);
-  let region = _startRegionCache.get(key);
-  if (region === undefined) {
-    region = nearestStartRegion(lat, lon);
-    _startRegionCache.set(key, region);
-  }
-  return region;
-}
-
 function pointNearNestingZone(lat, lon) {
   const THRESH = 0.018;
   for (const zone of nestingPolygons) {
@@ -1360,6 +1369,121 @@ function nearestNestingBeach(lat, lon) {
     }
   }
   return bestName;
+}
+
+function buildRegionIndex() {
+  if (!window._REGIONS_GEOJSON) return;
+  regionPolygons = window._REGIONS_GEOJSON.features.map(f => {
+    const g = f.geometry;
+    const polys = g.type === 'Polygon' ? [g.coordinates] : g.coordinates;
+    const rings = polys.map(poly => poly[0]);
+    const lats = [], lons = [];
+    rings.forEach(ring => ring.forEach(([lon, lat]) => { lats.push(lat); lons.push(lon); }));
+    return {
+      name: f.properties.name,
+      kind: f.properties.kind,
+      minLat: Math.min(...lats), maxLat: Math.max(...lats),
+      minLon: Math.min(...lons), maxLon: Math.max(...lons),
+      rings,
+    };
+  });
+}
+
+function zoomToRegion(name) {
+  const r = regionPolygons.find(x => x.name === name);
+  if (r) { map.flyToBounds([[r.minLat, r.minLon], [r.maxLat, r.maxLon]], { maxZoom: 7, padding: [30, 30] }); return; }
+  // fallback: zoom to all matching states if name is 'United States'
+  const matches = regionPolygons.filter(x => x.kind === 'state');
+  if (!matches.length) return;
+  const b = matches.reduce((a, r) => [[Math.min(a[0][0],r.minLat),Math.min(a[0][1],r.minLon)],[Math.max(a[1][0],r.maxLat),Math.max(a[1][1],r.maxLon)]], [[90,180],[-90,-180]]);
+  map.flyToBounds(b, { maxZoom: 5, padding: [30, 30] });
+}
+
+function _buildOriginTable(originMap, tbody) {
+  tbody.innerHTML = '';
+  const states = [], countries = [], unknowns = [];
+  let usTotalCount = 0, usTotalMpw = 0;
+  const US_NAMES = new Set(['United States', 'United States of America']);
+  originMap.forEach(({count, mpw}, region) => {
+    const rp = regionPolygons.find(x => x.name === region);
+    if ((rp && rp.kind === 'state') || US_NAMES.has(region)) {
+      if (rp && rp.kind === 'state') states.push([region, count, mpw]);
+      usTotalCount += count; usTotalMpw += mpw;
+    } else if (!region || region === 'Unknown') {
+      unknowns.push([region || 'Unknown', count, mpw]);
+    } else {
+      countries.push([region, count, mpw]);
+    }
+  });
+  states.sort((a, b) => b[1] - a[1]);
+  countries.sort((a, b) => b[1] - a[1]);
+
+  const makeRow = (label, count, mpw, indent, onClick) => {
+    const tr = document.createElement('tr');
+    if (onClick) { tr.style.cursor = 'pointer'; tr.addEventListener('click', onClick); }
+    const nameHtml = indent
+      ? '<td style="padding-left:16px;color:var(--text-secondary);font-size:10.5px">' + label + '</td>'
+      : '<td>' + label + '</td>';
+    tr.innerHTML = nameHtml +
+      '<td style="text-align:right;color:var(--text-secondary)">' + count + '</td>' +
+      '<td style="text-align:right;color:var(--text-secondary)">' + (mpw > 0 ? mpw.toFixed(2) : '—') + '</td>';
+    return tr;
+  };
+
+  countries.forEach(([region, count, mpw]) => tbody.appendChild(makeRow(region, count, mpw, false, () => zoomToRegion(region))));
+
+  if (usTotalCount > 0) {
+    const usStateBounds = states.reduce((a, [n]) => {
+      const r = regionPolygons.find(x => x.name === n);
+      return r ? [[Math.min(a[0][0],r.minLat),Math.min(a[0][1],r.minLon)],[Math.max(a[1][0],r.maxLat),Math.max(a[1][1],r.maxLon)]] : a;
+    }, [[90,180],[-90,-180]]);
+    tbody.appendChild(makeRow('United States', usTotalCount, usTotalMpw, false,
+      () => map.flyToBounds(usStateBounds, { maxZoom: 5, padding: [30, 30] })));
+    states.forEach(([region, count, mpw]) => tbody.appendChild(makeRow(region, count, mpw, true, () => zoomToRegion(region))));
+  }
+
+  unknowns.forEach(([region, count, mpw]) => tbody.appendChild(makeRow(region, count, mpw, false, null)));
+}
+
+function _pointInRing(lon, lat, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+    if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi)) inside = !inside;
+  }
+  return inside;
+}
+
+function _ringMinDistSq(lat, lon, ring) {
+  let best = Infinity;
+  for (let i = 0; i < ring.length - 1; i++) {
+    const [x1, y1] = ring[i], [x2, y2] = ring[i + 1];
+    const dx = x2 - x1, dy = y2 - y1, lenSq = dx * dx + dy * dy;
+    let t = lenSq > 0 ? ((lon - x1) * dx + (lat - y1) * dy) / lenSq : 0;
+    t = Math.max(0, Math.min(1, t));
+    const d2 = (lat - (y1 + t * dy)) ** 2 + (lon - (x1 + t * dx)) ** 2;
+    if (d2 < best) best = d2;
+  }
+  return best;
+}
+
+function nearestStartRegion(lat, lon) {
+  for (const r of regionPolygons) {
+    if (lat < r.minLat || lat > r.maxLat || lon < r.minLon || lon > r.maxLon) continue;
+    if (r.rings.some(ring => _pointInRing(lon, lat, ring))) return r.name;
+  }
+  for (const pad of [2, 5, 15, 1000]) {
+    let bestName = '', bestDist = Infinity;
+    for (const r of regionPolygons) {
+      if (lat < r.minLat - pad || lat > r.maxLat + pad || lon < r.minLon - pad || lon > r.maxLon + pad) continue;
+      for (const ring of r.rings) {
+        const d2 = _ringMinDistSq(lat, lon, ring);
+        if (d2 < bestDist) { bestDist = d2; bestName = r.name; }
+      }
+    }
+    if (bestName) return bestName;
+  }
+  return 'Unknown';
 }
 
 function renderNestingZones() {
@@ -1416,6 +1540,7 @@ function renderGmuZones() {
       const gmu = GMU_LOOKUP[p.Beach];
       layer.on('click', () => {
         if (gmu) openGmuPanel(gmu);
+        openBeachPanelFromGmu(p.Beach);
         if (!document.getElementById('togTrajectories').checked || !gmu) return;
         trajFilterGmu = (trajFilterGmu === gmu) ? null : gmu;
         trajFilterBeach = null;
@@ -1434,13 +1559,123 @@ function renderGmuZones() {
   document.getElementById('gmuLegend').style.display = 'flex';
 }
 
-function _renderGmuEndingTab(gmuCode, gmuPts, gmuBeaches) {
+function _beachCentroid(geometry) {
+  const lats = [], lons = [];
+  const collect = coords => coords.forEach(([lon, lat]) => { lons.push(lon); lats.push(lat); });
+  if (geometry.type === 'LineString') collect(geometry.coordinates);
+  else if (geometry.type === 'MultiLineString') geometry.coordinates.forEach(collect);
+  const n = lats.length || 1;
+  return [lats.reduce((a, b) => a + b, 0) / n, lons.reduce((a, b) => a + b, 0) / n];
+}
+
+function setBeachMetric(m) {
+  beachSizeMetric = m;
+  document.getElementById('btnBeachMpw').classList.toggle('active', m === 'mpw');
+  document.getElementById('btnBeachCount').classList.toggle('active', m === 'count');
+  renderBeachZones();
+}
+
+function setBeachSpecies(s) {
+  beachColorSpecies = s;
+  document.getElementById('btnBeachCc').classList.toggle('active', s === 'cc');
+  document.getElementById('btnBeachCm').classList.toggle('active', s === 'cm');
+  renderBeachZones();
+}
+
+function renderBeachZones() {
+  if (beachZoneLayer) { map.removeLayer(beachZoneLayer); beachZoneLayer = null; }
+  const ctrl = document.getElementById('beachZonesControls');
+  if (!document.getElementById('togBeachZones').checked || !window._NESTING_GEOJSON) {
+    if (ctrl) ctrl.style.display = 'none';
+    if (_selectedBeachName !== null) closeBeachPanel();
+    return;
+  }
+  if (ctrl) ctrl.style.display = 'flex';
+
+  const beachStats = new Map();
+  allParticles.forEach(p => {
+    if (!beachStats.has(p.nesting_beach)) beachStats.set(p.nesting_beach, { mpw: 0, count: 0 });
+    const e = beachStats.get(p.nesting_beach); e.count++; e.mpw += (p.mpw || 0);
+  });
+
+  const seen = new Set();
+  const beachFeatures = [];
+  window._NESTING_GEOJSON.features.forEach(f => {
+    const name = f.properties.Beach;
+    if (!seen.has(name)) { seen.add(name); beachFeatures.push(f); }
+  });
+
+  const vals = beachFeatures.map(f => (beachStats.get(f.properties.Beach) || {})[beachSizeMetric] || 0);
+  const maxVal = Math.max(...vals) || 1;
+  const minR = 4, maxR = 22;
+  const DENS_COLOR = { LOW: '#2ecc71', MED: '#e67e22', HIGH: '#e74c3c' };
+
+  beachZoneLayer = L.layerGroup();
+  beachFeatures.forEach(f => {
+    const name = f.properties.Beach;
+    const props = f.properties;
+    const stats = beachStats.get(name) || { mpw: 0, count: 0 };
+    const val = stats[beachSizeMetric] || 0;
+    const r = minR + (maxR - minR) * Math.sqrt(val / maxVal);
+    const cls = beachColorSpecies === 'cc' ? props.ccDensClas : props.cmDensClas;
+    const fillColor = DENS_COLOR[cls] || '#888888';
+    const [lat, lon] = _beachCentroid(f.geometry);
+    const isSelected = name === _selectedBeachName;
+
+    const circle = L.circleMarker([lat, lon], {
+      radius: r, fillColor, fillOpacity: 0.78,
+      color: isSelected ? '#ffc145' : '#fff',
+      weight: isSelected ? 3 : 1,
+      opacity: isSelected ? 1 : 0.6,
+    });
+    circle.on('mouseover', () => {
+      if (name !== _selectedBeachName) circle.setStyle({ weight: 2.5, opacity: 1 });
+    });
+    circle.on('mouseout', () => {
+      circle.setStyle(name === _selectedBeachName
+        ? { color: '#ffc145', weight: 3, opacity: 1 }
+        : { color: '#fff', weight: 1, opacity: 0.6 });
+    });
+    circle.on('click', () => _onBeachZoneClick(name, props));
+    beachZoneLayer.addLayer(circle);
+  });
+  beachZoneLayer.addTo(map);
+}
+
+function _onBeachZoneClick(name, props) {
+  if (_selectedBeachName === name) {
+    closeBeachPanel();
+    return;
+  }
+  _selectedBeachName = name;
+  renderBeachZones();
+  openBeachPanel(name, props);
+  trajFilterBeach = name;
+  if (document.getElementById('togTrajectories').checked) {
+    rebuildTrajectories();
+  }
+}
+
+function openGmuPanel(gmuCode, skipCloseBeach) {
+  _currentGmu = gmuCode;
+  if (!skipCloseBeach) closeBeachPanel();
+  const color = GMU_COLORS[gmuCode] || '#aaaaaa';
+  const gmuBeaches = Object.keys(GMU_LOOKUP).filter(n => GMU_LOOKUP[n] === gmuCode).sort();
+  const beachSet = new Set(gmuBeaches);
+
+  const filtered = getFiltered();
+  const gmuPts = filtered.filter(p => beachSet.has(p.nesting_beach));
   const totalMpw = gmuPts.reduce((s, p) => s + (p.mpw || 0), 0);
+
   const beachStats = new Map();
   gmuPts.forEach(p => {
     if (!beachStats.has(p.nesting_beach)) beachStats.set(p.nesting_beach, { count: 0, mpw: 0 });
     const e = beachStats.get(p.nesting_beach); e.count++; e.mpw += (p.mpw || 0);
   });
+
+  document.getElementById('gmuPanelHeader').style.background = color;
+  document.getElementById('gmuPanelTabs').style.background = color;
+  document.getElementById('gmuPanelTitle').textContent = 'GMU — ' + gmuCode;
 
   const n = gmuBeaches.length;
   const avgPts = n > 0 ? (gmuPts.length / n) : 0;
@@ -1455,113 +1690,116 @@ function _renderGmuEndingTab(gmuCode, gmuPts, gmuBeaches) {
   gmuBeaches.forEach(name => {
     const s = beachStats.get(name) || { count: 0, mpw: 0 };
     const tr = document.createElement('tr');
+    tr.className = 'gmu-beach-row';
+    tr.dataset.beach = name;
     tr.innerHTML = '<td>' + name + '</td>' +
       '<td style="text-align:right;color:var(--text-secondary)">' + s.count + '</td>' +
       '<td style="text-align:right;color:var(--text-secondary)">' + (s.mpw > 0 ? s.mpw.toFixed(2) : '—') + '</td>';
+    tr.addEventListener('click', () => openBeachPanelFromGmu(name));
     tbody.appendChild(tr);
   });
-}
 
-function _renderGmuStartingTab(gmuPts) {
-  let nCoastal = 0, nRiver = 0, nOutside = 0;
-  gmuPts.forEach(p => {
-    const s = getSourceType(p.start_lat, p.start_lon);
-    if (s === 'coastal') nCoastal++;
-    else if (s === 'river') nRiver++;
-    else nOutside++;
-  });
-  document.getElementById('gmuSourceStats').innerHTML =
-    '<div class="gmu-stat"><span class="gmu-stat-val" style="color:' + SRC_COLORS.coastal + '">' + nCoastal.toLocaleString() + '</span><span class="gmu-stat-lbl">' + SRC_LABELS.coastal + '</span></div>' +
-    '<div class="gmu-stat"><span class="gmu-stat-val" style="color:' + SRC_COLORS.river + '">' + nRiver.toLocaleString() + '</span><span class="gmu-stat-lbl">' + SRC_LABELS.river + '</span></div>' +
-    '<div class="gmu-stat"><span class="gmu-stat-val" style="color:' + SRC_COLORS.outside + '">' + nOutside.toLocaleString() + '</span><span class="gmu-stat-lbl">' + SRC_LABELS.outside + '</span></div>';
-
-  const US_NAME = 'United States of America';
-  const regionStats = new Map();
+  // Origin tab
+  const originMap = new Map();
   gmuPts.forEach(p => {
     const region = p.start_region || 'Unknown';
-    if (!regionStats.has(region)) regionStats.set(region, { count: 0, mpw: 0 });
-    const e = regionStats.get(region); e.count++; e.mpw += (p.mpw || 0);
+    if (!originMap.has(region)) originMap.set(region, { count: 0, mpw: 0 });
+    const e = originMap.get(region); e.count++; e.mpw += (p.mpw || 0);
   });
+  _buildOriginTable(originMap, document.querySelector('#gmuOriginTable tbody'));
 
-  // Group US states under a combined "United States of America" row. Particles that matched
-  // the country polygon but no specific state polygon (admin_0/admin_1 boundary mismatch near
-  // the coast) get a visible "Other / Unspecified" sub-row so the state sub-rows always sum to
-  // the combined total shown on the parent row.
-  const usStates = [];
-  let usCount = 0, usMpw = 0, usUnspecified = { count: 0, mpw: 0 };
-  for (const [name, s] of regionStats) {
-    if (name === US_NAME || US_STATE_NAMES.has(name)) {
-      usCount += s.count; usMpw += s.mpw;
-      if (US_STATE_NAMES.has(name)) usStates.push([name, s]);
-      else { usUnspecified.count += s.count; usUnspecified.mpw += s.mpw; }
-      regionStats.delete(name);
-    }
-  }
-  usStates.sort((a, b) => b[1].count - a[1].count);
-  if (usUnspecified.count > 0) usStates.push(['Other / Unspecified', usUnspecified]);
-  if (usCount > 0) regionStats.set(US_NAME, { count: usCount, mpw: usMpw });
-
-  const sortedRegions = [...regionStats.entries()].sort((a, b) => b[1].count - a[1].count);
-
-  const tbody = document.querySelector('#gmuRegionTable tbody');
-  tbody.innerHTML = '';
-  sortedRegions.forEach(([name, s]) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = '<td>' + name + '</td>' +
-      '<td style="text-align:right;color:var(--text-secondary)">' + s.count.toLocaleString() + '</td>' +
-      '<td style="text-align:right;color:var(--text-secondary)">' + (s.mpw > 0 ? s.mpw.toFixed(2) : '—') + '</td>';
-    tbody.appendChild(tr);
-    if (name === US_NAME) {
-      usStates.forEach(([stateName, stateS]) => {
-        const str = document.createElement('tr');
-        str.innerHTML = '<td style="padding-left:18px;color:var(--text-secondary)">' + stateName + '</td>' +
-          '<td style="text-align:right;color:var(--text-secondary)">' + stateS.count.toLocaleString() + '</td>' +
-          '<td style="text-align:right;color:var(--text-secondary)">' + (stateS.mpw > 0 ? stateS.mpw.toFixed(2) : '—') + '</td>';
-        tbody.appendChild(str);
-      });
-    }
-  });
-}
-
-function _updateGmuTabUI(tab) {
-  document.getElementById('gmuTabEnding').classList.toggle('active', tab === 'ending');
-  document.getElementById('gmuTabStarting').classList.toggle('active', tab === 'starting');
-  document.getElementById('gmuEndingContent').style.display = tab === 'ending' ? '' : 'none';
-  document.getElementById('gmuStartingContent').style.display = tab === 'starting' ? '' : 'none';
-}
-
-function switchGmuTab(tab) {
-  _gmuActiveTab = tab;
-  _updateGmuTabUI(tab);
-  if (_openGmuCode) openGmuPanel(_openGmuCode, true);
-}
-
-function openGmuPanel(gmuCode, preserveTab) {
-  if (!preserveTab) _gmuActiveTab = 'ending';
-  _openGmuCode = gmuCode;
-  const color = GMU_COLORS[gmuCode] || '#aaaaaa';
-  const gmuBeaches = Object.keys(GMU_LOOKUP).filter(n => GMU_LOOKUP[n] === gmuCode).sort();
-  const beachSet = new Set(gmuBeaches);
-
-  const filtered = getFiltered();
-  const gmuPts = filtered.filter(p => beachSet.has(p.nesting_beach));
-
-  document.getElementById('gmuPanelHeader').style.background = color;
-  document.getElementById('gmuPanelTitle').textContent = 'GMU — ' + gmuCode;
-  _updateGmuTabUI(_gmuActiveTab);
-
-  if (_gmuActiveTab === 'ending') {
-    _renderGmuEndingTab(gmuCode, gmuPts, gmuBeaches);
-  } else {
-    _renderGmuStartingTab(gmuPts);
-  }
-
+  if (!document.getElementById('gmuPanel').classList.contains('visible')) switchGmuTab('beaches');
   document.getElementById('gmuPanel').classList.add('visible');
 }
 
+function switchGmuTab(tab) {
+  document.getElementById('gmuTabBeaches').classList.toggle('active', tab === 'beaches');
+  document.getElementById('gmuTabOrigin').classList.toggle('active', tab === 'origin');
+  document.getElementById('gmuBeachesContent').style.display = tab === 'beaches' ? '' : 'none';
+  document.getElementById('gmuOriginContent').style.display = tab === 'origin' ? '' : 'none';
+}
+
 function closeGmuPanel() {
+  _currentGmu = null;
   document.getElementById('gmuPanel').classList.remove('visible');
-  _openGmuCode = null;
+}
+
+function openBeachPanelFromGmu(name) {
+  const feature = window._NESTING_GEOJSON && window._NESTING_GEOJSON.features.find(f => f.properties.Beach === name);
+  if (!feature) return;
+  const [lat, lon] = _beachCentroid(feature.geometry);
+  map.flyTo([lat, lon], 11);
+  _selectedBeachName = name;
+  renderBeachZones();
+  document.querySelectorAll('.gmu-beach-row').forEach(r => r.classList.toggle('selected', r.dataset.beach === name));
+  openBeachPanel(name, feature.properties, true);
+}
+
+function openBeachPanel(name, props, fromGmu) {
+  const gmuVisible = document.getElementById('gmuPanel').classList.contains('visible');
+  if (!gmuVisible) closeGmuPanel();
+  document.getElementById('beachPanel').classList.toggle('from-gmu', gmuVisible);
+  document.getElementById('beachPanelTitle').textContent = name;
+
+  const beachPts = getFiltered().filter(p => p.nesting_beach === name);
+  const totalCount = beachPts.length;
+  const totalMpw   = beachPts.reduce((s, p) => s + (p.mpw || 0), 0);
+
+  document.getElementById('beachPanelStats').innerHTML =
+    '<div class="gmu-stat"><span class="gmu-stat-val">' + totalCount.toLocaleString() + '</span><span class="gmu-stat-lbl">Particles</span></div>' +
+    '<div class="gmu-stat"><span class="gmu-stat-val">' + totalMpw.toFixed(2) + '</span><span class="gmu-stat-lbl">MPW (tons)</span></div>';
+
+  const county = props.County || '—';
+  const ccDens = (props.ccMeanDens || '—') + ' (' + (props.ccDensClas || '—') + ')';
+  const cmDens = (props.cmMeanDens || '—') + ' (' + (props.cmDensClas || '—') + ')';
+  document.getElementById('beachPanelTurtle').innerHTML =
+    '<strong style="color:var(--text-primary)">County:</strong> ' + county + '<br>' +
+    '<strong style="color:var(--text-primary)">Loggerhead:</strong> ' + ccDens + '<br>' +
+    '<strong style="color:var(--text-primary)">Green turtle:</strong> ' + cmDens;
+
+  const yearMap = new Map();
+  beachPts.forEach(p => {
+    if (!yearMap.has(p.year)) yearMap.set(p.year, { count: 0, mpw: 0 });
+    const e = yearMap.get(p.year); e.count++; e.mpw += (p.mpw || 0);
+  });
+  const tbody = document.querySelector('#beachYearTable tbody');
+  tbody.innerHTML = '';
+  [...yearMap.keys()].sort().forEach(yr => {
+    const { count, mpw } = yearMap.get(yr);
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td>' + yr + '</td>' +
+      '<td style="text-align:right;color:var(--text-secondary)">' + count + '</td>' +
+      '<td style="text-align:right;color:var(--text-secondary)">' + (mpw > 0 ? mpw.toFixed(2) : '—') + '</td>';
+    tbody.appendChild(tr);
+  });
+
+  // Origin tab
+  const originMap = new Map();
+  beachPts.forEach(p => {
+    const region = p.start_region || 'Unknown';
+    if (!originMap.has(region)) originMap.set(region, { count: 0, mpw: 0 });
+    const e = originMap.get(region); e.count++; e.mpw += (p.mpw || 0);
+  });
+  _buildOriginTable(originMap, document.querySelector('#beachOriginTable tbody'));
+
+  if (!document.getElementById('beachPanel').classList.contains('visible')) switchBeachTab('stats');
+  document.getElementById('beachPanel').classList.add('visible');
+}
+
+function switchBeachTab(tab) {
+  document.getElementById('beachTabStats').classList.toggle('active', tab === 'stats');
+  document.getElementById('beachTabOrigin').classList.toggle('active', tab === 'origin');
+  document.getElementById('beachStatsContent').style.display = tab === 'stats' ? '' : 'none';
+  document.getElementById('beachOriginContent').style.display = tab === 'origin' ? '' : 'none';
+}
+
+function closeBeachPanel() {
+  document.getElementById('beachPanel').classList.remove('visible', 'from-gmu');
+  _selectedBeachName = null;
+  trajFilterBeach = null;
+  document.querySelectorAll('.gmu-beach-row').forEach(r => r.classList.remove('selected'));
+  renderBeachZones();
+  rebuildTrajectories();
 }
 
 function toggleNestingFilter() {
@@ -1691,7 +1929,16 @@ function updateStatsBar(pts) {
 }
 
 // ── Rebuild layers ─────────────────────────────────────────────────────────
-function rebuildLayers() { rebuildHeatmaps(); rebuildDots(); rebuildTrajectories(); rebuildStartPoints(); updateStatsBar(getFiltered()); }
+function refreshOpenPanels() {
+  const beachOpen = document.getElementById('beachPanel').classList.contains('visible');
+  const gmuOpen   = document.getElementById('gmuPanel').classList.contains('visible');
+  if (beachOpen && _selectedBeachName) {
+    const feat = window._NESTING_GEOJSON && window._NESTING_GEOJSON.features.find(f => f.properties.Beach === _selectedBeachName);
+    if (feat) openBeachPanel(_selectedBeachName, feat.properties);
+  }
+  if (gmuOpen && _currentGmu) openGmuPanel(_currentGmu, true);
+}
+function rebuildLayers() { rebuildHeatmaps(); rebuildDots(); rebuildTrajectories(); rebuildStartPoints(); updateStatsBar(getFiltered()); refreshOpenPanels(); }
 
 // ── Starting point dots ────────────────────────────────────────────────────
 function rebuildStartPoints() {
@@ -2554,6 +2801,7 @@ function _wireSliders() {
   });
   document.getElementById("togNestingZones").addEventListener("change", renderNestingZones);
   document.getElementById("togGmuZones").addEventListener("change", renderGmuZones);
+  document.getElementById("togBeachZones").addEventListener("change", renderBeachZones);
 }
 
 // ── Init (called after data loaded) ───────────────────────────────────────
@@ -2563,6 +2811,7 @@ function init() {
   rebuildLayers();
   renderNestingZones();
   renderGmuZones();
+  renderBeachZones();
   if (allParticles.length > 0) {
     const lats = allParticles.map(p => p.lat), lons = allParticles.map(p => p.lon);
     map.fitBounds([[Math.min(...lats)-0.3, Math.min(...lons)-0.3],[Math.max(...lats)+0.3, Math.max(...lons)+0.3]]);
@@ -2578,7 +2827,7 @@ function init() {
     buildNestingIndex();
     buildRegionIndex();
     allParticles = (window._FLORIDA_DATA.mc || {}).particles || [];
-    allParticles.forEach(p => { p.nesting_beach = nearestNestingBeach(p.lat, p.lon); p.start_region = cachedStartRegion(p.start_lat, p.start_lon); });
+    allParticles.forEach(p => { p.nesting_beach = nearestNestingBeach(p.lat, p.lon); p.start_region = nearestStartRegion(p.start_lat, p.start_lon); });
     _buildModelIndex('mc');
     init();
     _initDrawerBasemapList();
