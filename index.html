@@ -345,10 +345,6 @@
   .gmu-stat-lbl { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.4px; }
   #gmuBeachTable { width: 100%; border-collapse: collapse; font-size: 11px; }
   #gmuBeachTable th { text-align: left; color: var(--text-secondary); font-weight: 600; padding: 3px 4px 5px; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; }
-  #gmuBeachTable th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
-  #gmuBeachTable th.sortable:hover { color: var(--text-primary); }
-  #gmuBeachTable th.sortable .sort-arrow { display: inline-block; width: 10px; font-size: 9px; }
-  #gmuBeachTable th.sortable.sort-active { color: var(--text-primary); }
   #gmuBeachTable td { padding: 4px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--text-primary); vertical-align: middle; }
   #gmuBeachTable tr:last-child td { border-bottom: none; }
   #gmuBeachTable tr:hover td { background: rgba(255,255,255,0.03); }
@@ -822,9 +818,9 @@
       <table id="gmuBeachTable">
         <thead>
           <tr>
-            <th class="sortable" data-sort-key="name" onclick="sortGmuBeachTable('name')">Beach<span class="sort-arrow"></span></th>
-            <th class="sortable" style="text-align:right" data-sort-key="count" onclick="sortGmuBeachTable('count')">Particles<span class="sort-arrow"></span></th>
-            <th class="sortable" style="text-align:right" data-sort-key="mpw" onclick="sortGmuBeachTable('mpw')">MPW (t)<span class="sort-arrow"></span></th>
+            <th>Beach</th>
+            <th style="text-align:right">Particles</th>
+            <th style="text-align:right">MPW (t)</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -961,7 +957,7 @@
       </div>
       <div id="gmuLegend">
         <span class="gmu-swatch" style="background:#e74c3c" onclick="openGmuPanel('NW')">NW</span>
-        <span class="gmu-swatch" style="background:#e67e22" onclick="openGmuPanel('NE')">NE</span>
+        <span class="gmu-swatch" style="background:#e67e22" onclick="openGmuPanel('NO')">NO</span>
         <span class="gmu-swatch" style="background:#f1c40f;color:#222" onclick="openGmuPanel('CE')">CE</span>
         <span class="gmu-swatch" style="background:#2ecc71;color:#222" onclick="openGmuPanel('CW')">CW</span>
         <span class="gmu-swatch" style="background:#3498db" onclick="openGmuPanel('DT')">DT</span>
@@ -1077,26 +1073,23 @@ let beachFilter   = null;
 let trajFilterBeach = null;  // nesting beach name, or null
 let trajFilterGmu   = null;  // GMU code, or null
 let _currentGmu     = null;  // GMU code of open GMU panel
-let _gmuBeachRows   = [];    // [{ name, count, mpw }] for current GMU panel
-let _gmuSortKey     = 'name';
-let _gmuSortDir     = 1;     // 1 = asc, -1 = desc
 let nestingLayer  = null;
 let nestingPolygons = [];
 let regionPolygons  = [];
 
 // ── GMU zones ──────────────────────────────────────────────────────────────
 const GMU_COLORS = {
-  NW: '#e74c3c', NE: '#e67e22', CE: '#f1c40f',
+  NW: '#e74c3c', NO: '#e67e22', CE: '#f1c40f',
   CW: '#2ecc71', DT: '#3498db', SE: '#9b59b6', SW: '#e91e8c'
 };
 const GMU_LOOKUP = {
-  "Alligator Point":"NW", "Amelia Island":"NE", "Amelia Island State Park":"NE",
-  "Anastasia State Park":"NE", "Anclote Key Preserve State Park":"CW",
+  "Alligator Point":"NW", "Amelia Island":"NO", "Amelia Island State Park":"NO",
+  "Anastasia State Park":"NO", "Anclote Key Preserve State Park":"CW",
   "Anna Maria Island":"CW", "Archie Carr National Wildlife Refuge (Brevard)":"CE",
   "Avalon State Park":"CE", "Bahia Honda State Park":"SE", "Bald Point State Park":"NW",
-  "Barefoot Beach Preserve":"SW", "Beach Club Drive (North)":"NE",
-  "Beach Club Drive (South)":"NE", "Big Hickory Island":"SW", "Big Pine Key":"SE",
-  "Big Talbot Island State Park":"NE", "Bimini Pass Beach":"CW",
+  "Barefoot Beach Preserve":"SW", "Beach Club Drive (North)":"NO",
+  "Beach Club Drive (South)":"NO", "Big Hickory Island":"SW", "Big Pine Key":"SE",
+  "Big Talbot Island State Park":"NO", "Bimini Pass Beach":"CW",
   "Biscayne National Park":"SE", "Boca Chica Key":"SE", "Boca Raton Beaches":"SE",
   "Bonita Beach":"SW", "Bunche Beach":"SW", "Cabbage Key (North)":"CW",
   "Cabbage Key (South)":"CW", "Caladesi Island State Park":"CW",
@@ -1113,30 +1106,30 @@ const GMU_LOOKUP = {
   "Don Pedro State Park":"CW", "Dry Tortugas (Bush Key)":"DT",
   "Dry Tortugas (East Key)":"DT", "Dry Tortugas (Garden Key)":"DT",
   "Dry Tortugas (Loggerhead Key)":"DT", "Dry Tortugas (Middle Key)":"DT",
-  "Duval County Beaches (South)":"NE", "ENP Cape Sable (North)":"SW",
+  "Duval County Beaches (South)":"NO", "ENP Cape Sable (North)":"SW",
   "ENP Cape Sable (South)":"SW", "Eglin Air Force Base (Okaloosa-East)":"NW",
   "Eglin Air Force Base (Okaloosa-West)":"NW",
   "Eglin Air Force Base (Santa Rosa County)":"NW", "Egmont Key":"CW",
-  "Estero Island":"SW", "Fat Deer Key":"SE", "Fisher Island":"SE", "Flagler Beach":"NE",
-  "Flagler County Beaches (North)":"NE", "Flagler County Beaches (South)":"NE",
-  "Fort Clinch State Park":"NE", "Fort DeSoto County Park":"CW",
+  "Estero Island":"SW", "Fat Deer Key":"SE", "Fisher Island":"SE", "Flagler Beach":"NO",
+  "Flagler County Beaches (North)":"NO", "Flagler County Beaches (South)":"NO",
+  "Fort Clinch State Park":"NO", "Fort DeSoto County Park":"CW",
   "Fort Lauderdale Beach":"SE", "Fort Lauderdale Beach (POA-Inlet Beach)":"SE",
-  "Fort Lauderdale Beach (Port Everglades Inlet)":"SE", "Fort Matanzas (North)":"NE",
-  "Fort Matanzas (South)":"NE", "Fort Matanzas National Monument":"NE",
+  "Fort Lauderdale Beach (Port Everglades Inlet)":"SE", "Fort Matanzas (North)":"NO",
+  "Fort Matanzas (South)":"NO", "Fort Matanzas National Monument":"NO",
   "Fort Pierce State Park":"CE", "Fort Zachary Taylor State Park":"SE",
-  "Gamble Rogers Memorial SRA":"NE", "Gasparilla Island North (Charlotte County)":"CW",
+  "Gamble Rogers Memorial SRA":"NO", "Gasparilla Island North (Charlotte County)":"CW",
   "Gasparilla Island South (Lee County)":"CW", "Gasparilla Island State Park":"CW",
-  "George Crady Bridge Fishing Pier SP (Sawpit Island)":"NE", "Golden Beach":"SE",
-  "Grayton Beach State Park":"NW", "Guana River (South)":"NE",
-  "Guana Tolomato Matanzas NERR":"NE",
+  "George Crady Bridge Fishing Pier SP (Sawpit Island)":"NO", "Golden Beach":"SE",
+  "Grayton Beach State Park":"NW", "Guana River (South)":"NO",
+  "Guana Tolomato Matanzas NERR":"NO",
   "Gulf Islands National Seashore (Fort Pickens)":"NW",
   "Gulf Islands National Seashore (Perdido Key)":"NW",
   "Gulf Islands National Seashore (Santa Rosa)":"NW", "Gulfstream":"SE",
-  "Gulfstream Park":"SE", "Hanna Park":"NE", "Henderson Beach State Park":"NW",
+  "Gulfstream Park":"SE", "Hanna Park":"NO", "Henderson Beach State Park":"NW",
   "Highland Beach":"SE", "Hobe Sound National Wildlife Refuge":"SE",
   "Hollywood/Hallandale Beaches":"SE", "Honeymoon Island State Park":"CW",
-  "Huguenot Park":"NE",
-  "Hutchinson Island (Martin County)":"SE",
+  "Honeymoon Island State Park (Oystercatcher Key)":"CW", "Huguenot Park":"NO",
+  "Hutchinson Island (Martin County)":"SE", "Hutchinson Island (North Tip)":"SE",
   "Hutchinson Island (North)":"SE", "Hutchinson Island (South)":"SE",
   "Indian River County Beaches (North)":"CE", "Indian River County Beaches (South)":"CE",
   "Indian River Shores (North)":"CE", "Indian River Shores (South)":"CE",
@@ -1147,31 +1140,31 @@ const GMU_LOOKUP = {
   "Key Biscayne (Crandon Park Marina)":"SE", "Key Biscayne (Northern Point)":"SE",
   "Key Colony Beach":"SE", "Lake Worth Municipal Beach":"SE", "Lantana":"SE",
   "Lido Key":"CW", "Little Crawl Key":"SE",
-  "Little Talbot Island State Park":"NE", "Long Key (West End)":"SE",
+  "Little Talbot Island State Park":"NO", "Long Key (West End)":"SE",
   "Long Key State Park":"SE", "Long Key State Park (Long Key Point)":"SE",
   "Longboat Key (North)":"CW", "Longboat Key (South)":"CW", "Lovers Key State Park":"SW",
   "Lower Matecumbe (Ocean)":"SE", "Manalapan (North)":"SE",
   "Manasota Key (Charlotte County)":"CW",
   "Manasota Key Beach (Sarasota County)":"CW", "Marco Island":"SW",
-  "Marineland Beach":"NE", "Mayport Naval Station":"NE",
+  "Marineland Beach":"NO", "Mayport Naval Station":"NO",
   "Merritt Island National Wildlife Refuge":"CE", "Mexico Beach":"NW",
   "Miami Beaches":"SE", "Mid Reach Beach":"CE", "Miramar Beach":"NW",
   "Mizell-Johnson State Park":"SE", "Naples Beach":"SW",
   "Nature Preserve Beach  (Key West)":"SE", "Navarre Beach":"NW", "New Smyrna Beach":"CE",
   "North Captiva Island (North)":"CW", "North Captiva Island (South)":"CW",
-  "North Captiva Island State Park":"CW", "North Peninsula State Park":"NE",
+  "North Captiva Island State Park":"CW", "North Peninsula State Park":"NO",
   "Ocean Reef Park":"SE", "Ocean Ridge (South)":"SE",
   "Okaloosa County Beaches (Destin)":"NW", "Okaloosa County Island Beaches":"NW",
-  "Old Boca Chica Road Beach (NAS)":"SE", "Old Ponte Vedra":"NE", "Outback Key":"CW",
+  "Old Boca Chica Road Beach (NAS)":"SE", "Old Ponte Vedra":"NO", "Outback Key":"CW",
   "Palm Beach County Beaches (Middle)":"SE", "Palm Beach Island (North)":"SE",
   "Palm Beach Shores":"SE", "Panama City Beach":"NW", "Parkshore Beach":"SW",
   "Patio Beach":"SE", "Patrick Space Force Base":"CE", "Pensacola Beach":"NW",
   "Perdido Key":"NW", "Perdido Key State Park":"NW", "Phipps Preserve Beach":"NW",
   "Pinellas County Beaches (Mid)":"CW", "Pinellas County Beaches (North)":"CW",
-  "Pompano/Lauderdale-by-the-Sea":"SE", "Ponte Vedra (North)":"NE",
-  "Ponte Vedra (South)":"NE", "Reach Beach (Key West)":"SE", "Residental Beach":"SE",
-  "Saint Andrews State Park":"NW",
-  "Saint Augustine Beaches":"NE", "Saint George Island":"NW",
+  "Pompano/Lauderdale-by-the-Sea":"SE", "Ponte Vedra (North)":"NO",
+  "Ponte Vedra (South)":"NO", "Reach Beach (Key West)":"SE", "Residental Beach":"SE",
+  "Saint Andrews State Park":"NW", "Saint Andrews State Park (Shell Key)":"NW",
+  "Saint Augustine Beaches":"NO", "Saint George Island":"NW",
   "Saint George Island State Park":"NW", "Saint Joe Beach":"NW",
   "Saint Joseph Peninsula":"NW", "Saint Joseph Peninsula State Park":"NW",
   "Saint Lucie County Beaches (North)":"CE", "Saint Lucie Inlet State Park":"SE",
@@ -1187,11 +1180,11 @@ const GMU_LOOKUP = {
   "Ten Thousand Islands National Wildlife Refuge":"SW", "Tequesta Beaches":"SE",
   "Topsail Hill Preserve State Park":"NW", "Tyndall Air Force Base":"NW",
   "UWF Property Beach":"NW", "Vanderbilt Beach":"SW", "Venice Beaches":"CW",
-  "Vilano Beach":"NE", "Virginia Key":"SE", "Virginia Key (South)":"SE",
-  "Volusia County Beaches (North)":"NE", "Volusia County Beaches (South)":"NE",
+  "Vilano Beach":"NO", "Virginia Key":"SE", "Virginia Key (South)":"SE",
+  "Volusia County Beaches (North)":"NO", "Volusia County Beaches (South)":"NO",
   "Wabasso Beach":"CE", "Wabasso Beach (South)":"CE", "Walton County Beaches (East)":"NW",
   "Walton County Beaches (Middle)":"NW", "Walton County Beaches (West)":"NW",
-  "Washington Oaks Gardens State Park":"NE", "Wiggins Pass State Park":"SW"
+  "Washington Oaks Gardens State Park":"NO", "Wiggins Pass State Park":"SW"
 };
 
 // ── Source type classification ─────────────────────────────────────────────
@@ -1648,15 +1641,6 @@ function renderBeachZones() {
   const minR = 4, maxR = 22;
   const DENS_COLOR = { LOW: '#2ecc71', MED: '#e67e22', HIGH: '#e74c3c' };
 
-  // Paint largest circles first (bottom) so smaller neighboring circles land on top and stay
-  // clickable — dense stretches of coastline have overlapping circles, and without this a big
-  // circle permanently swallows clicks meant for the smaller ones underneath it.
-  beachFeatures.sort((a, b) => {
-    const va = (beachStats.get(a.properties.Beach) || {})[beachSizeMetric] || 0;
-    const vb = (beachStats.get(b.properties.Beach) || {})[beachSizeMetric] || 0;
-    return vb - va;
-  });
-
   beachZoneLayer = L.layerGroup();
   beachFeatures.forEach(f => {
     const name = f.properties.Beach;
@@ -1694,24 +1678,8 @@ function _onBeachZoneClick(name, props) {
     closeBeachPanel();
     return;
   }
-  _selectBeach(name, props);
-}
-
-// Single entry point for "a beach got selected" — used by direct circle
-// clicks, GMU-zone-outline clicks, and GMU-table-row clicks, so all three
-// keep the beach panel, map highlight, and GMU row highlight in sync.
-function _selectBeach(name, props, opts) {
-  opts = opts || {};
   _selectedBeachName = name;
-  if (opts.flyTo) {
-    const feature = window._NESTING_GEOJSON && window._NESTING_GEOJSON.features.find(f => f.properties.Beach === name);
-    if (feature) {
-      const [lat, lon] = _beachCentroid(feature.geometry);
-      map.flyTo([lat, lon], 11);
-    }
-  }
   renderBeachZones();
-  document.querySelectorAll('.gmu-beach-row').forEach(r => r.classList.toggle('selected', r.dataset.beach === name));
   openBeachPanel(name, props);
   trajFilterBeach = name;
   if (document.getElementById('togTrajectories').checked) {
@@ -1748,13 +1716,19 @@ function openGmuPanel(gmuCode, skipCloseBeach) {
     '<div class="gmu-stat"><span class="gmu-stat-val">' + totalMpw.toFixed(2) + ' <span style="font-size:10px;font-weight:400;color:var(--text-secondary)">(' + avgMpw.toFixed(2) + ' avg)</span></span><span class="gmu-stat-lbl">MPW (tons)</span></div>' +
     '<div class="gmu-stat"><span class="gmu-stat-val">' + n + '</span><span class="gmu-stat-lbl">Beaches</span></div>';
 
-  _gmuBeachRows = gmuBeaches.map(name => {
+  const tbody = document.querySelector('#gmuBeachTable tbody');
+  tbody.innerHTML = '';
+  gmuBeaches.forEach(name => {
     const s = beachStats.get(name) || { count: 0, mpw: 0 };
-    return { name, count: s.count, mpw: s.mpw };
+    const tr = document.createElement('tr');
+    tr.className = 'gmu-beach-row';
+    tr.dataset.beach = name;
+    tr.innerHTML = '<td>' + name + '</td>' +
+      '<td style="text-align:right;color:var(--text-secondary)">' + s.count + '</td>' +
+      '<td style="text-align:right;color:var(--text-secondary)">' + (s.mpw > 0 ? s.mpw.toFixed(2) : '—') + '</td>';
+    tr.addEventListener('click', () => openBeachPanelFromGmu(name));
+    tbody.appendChild(tr);
   });
-  _gmuSortKey = 'name';
-  _gmuSortDir = 1;
-  _renderGmuBeachRows();
 
   // Origin tab
   const originMap = new Map();
@@ -1767,43 +1741,6 @@ function openGmuPanel(gmuCode, skipCloseBeach) {
 
   if (!document.getElementById('gmuPanel').classList.contains('visible')) switchGmuTab('beaches');
   document.getElementById('gmuPanel').classList.add('visible');
-}
-
-function sortGmuBeachTable(key) {
-  if (_gmuSortKey === key) {
-    _gmuSortDir *= -1;
-  } else {
-    _gmuSortKey = key;
-    _gmuSortDir = key === 'name' ? 1 : -1;
-  }
-  _renderGmuBeachRows();
-}
-
-function _renderGmuBeachRows() {
-  const key = _gmuSortKey, dir = _gmuSortDir;
-  const rows = _gmuBeachRows.slice().sort((a, b) => {
-    if (key === 'name') return a.name.localeCompare(b.name) * dir;
-    return (a[key] - b[key]) * dir;
-  });
-
-  document.querySelectorAll('#gmuBeachTable th.sortable').forEach(th => {
-    const active = th.dataset.sortKey === key;
-    th.classList.toggle('sort-active', active);
-    th.querySelector('.sort-arrow').textContent = active ? (dir === 1 ? '▲' : '▼') : '';
-  });
-
-  const tbody = document.querySelector('#gmuBeachTable tbody');
-  tbody.innerHTML = '';
-  rows.forEach(({ name, count, mpw }) => {
-    const tr = document.createElement('tr');
-    tr.className = 'gmu-beach-row';
-    tr.dataset.beach = name;
-    tr.innerHTML = '<td>' + name + '</td>' +
-      '<td style="text-align:right;color:var(--text-secondary)">' + count + '</td>' +
-      '<td style="text-align:right;color:var(--text-secondary)">' + (mpw > 0 ? mpw.toFixed(2) : '—') + '</td>';
-    tr.addEventListener('click', () => openBeachPanelFromGmu(name));
-    tbody.appendChild(tr);
-  });
 }
 
 function switchGmuTab(tab) {
@@ -1821,7 +1758,12 @@ function closeGmuPanel() {
 function openBeachPanelFromGmu(name) {
   const feature = window._NESTING_GEOJSON && window._NESTING_GEOJSON.features.find(f => f.properties.Beach === name);
   if (!feature) return;
-  _selectBeach(name, feature.properties, { flyTo: true });
+  const [lat, lon] = _beachCentroid(feature.geometry);
+  map.flyTo([lat, lon], 11);
+  _selectedBeachName = name;
+  renderBeachZones();
+  document.querySelectorAll('.gmu-beach-row').forEach(r => r.classList.toggle('selected', r.dataset.beach === name));
+  openBeachPanel(name, feature.properties, true);
 }
 
 function openBeachPanel(name, props, fromGmu) {
