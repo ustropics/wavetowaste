@@ -3,7 +3,8 @@
     "allow": [
       "Bash(git lfs *)",
       "Bash(shasum *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(git -C /Users/ustropics/Documents/tess/wavetowaste log -p --follow -- index.html)"
     ]
   }
 }
