@@ -673,6 +673,10 @@
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Beach Totals CSV
       </button>
+      <button class="dropdown-item" onclick="downloadOriginCSV(); closeExportCsvDropdown()">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Particle Origin CSV
+      </button>
     </div>
   </div>
 
@@ -767,6 +771,10 @@
         <button class="drawer-list-item" onclick="_drawerExport(downloadBeachTotalsCSV)">
           <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Beach Totals CSV
+        </button>
+        <button class="drawer-list-item" onclick="_drawerExport(downloadOriginCSV)">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Particle Origin CSV
         </button>
       </div>
     </div>
@@ -2862,6 +2870,66 @@ function downloadBeachTotalsCSV() {
   const blob = new Blob([header.join(',') + '\n' + rows.join('\n')], { type: 'text/csv' });
   const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url;
   a.download = currentModel + '_beach_totals' + _exportSuffix() + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function downloadOriginCSV() {
+  const filtered = getFiltered();
+
+  const seen = new Set();
+  const beaches = [];
+  (window._NESTING_GEOJSON ? window._NESTING_GEOJSON.features : []).forEach(f => {
+    const name = f.properties.Beach;
+    if (!seen.has(name)) { seen.add(name); beaches.push(name); }
+  });
+  beaches.sort((a, b) => a.localeCompare(b));
+
+  const US_NAMES = new Set(['United States', 'United States of America']);
+  const stats = new Map(); // beach -> region -> {count, mpw}
+  const countries = new Set();
+  const states = new Set();
+
+  filtered.forEach(p => {
+    const beach = p.nesting_beach; if (!beach) return;
+    const region = p.start_region || 'Unknown';
+    if (!stats.has(beach)) stats.set(beach, new Map());
+    const bm = stats.get(beach);
+    if (!bm.has(region)) bm.set(region, { count: 0, mpw: 0 });
+    const e = bm.get(region); e.count++; e.mpw += (p.mpw || 0);
+
+    const rp = regionPolygons.find(x => x.name === region);
+    if ((rp && rp.kind === 'state') || US_NAMES.has(region)) {
+      if (rp && rp.kind === 'state') states.add(region);
+    } else {
+      countries.add(region);
+    }
+  });
+
+  const countryCols = [...countries].sort((a, b) => a.localeCompare(b));
+  const stateCols = [...states].sort((a, b) => a.localeCompare(b));
+  const regionCols = [...countryCols, 'United States', ...stateCols];
+
+  const getStat = (beach, region) => {
+    const bm = stats.get(beach);
+    if (!bm) return { count: 0, mpw: 0 };
+    if (region === 'United States') {
+      let count = 0, mpw = 0;
+      bm.forEach((v, r) => { if (US_NAMES.has(r) || states.has(r)) { count += v.count; mpw += v.mpw; } });
+      return { count, mpw };
+    }
+    return bm.get(region) || { count: 0, mpw: 0 };
+  };
+
+  const quote = s => (s.includes(',') || s.includes(' ')) ? '"' + s + '"' : s;
+  const header = ['beach', ...regionCols.flatMap(r => [quote(r + ' particles'), quote(r + ' mpw_tons')])];
+  const rows = beaches.map(beach => {
+    const vals = regionCols.flatMap(r => { const { count, mpw } = getStat(beach, r); return [count, mpw.toFixed(4)]; });
+    return [quote(beach), ...vals].join(',');
+  });
+
+  const blob = new Blob([header.join(',') + '\n' + rows.join('\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url;
+  a.download = currentModel + '_particle_origin' + _exportSuffix() + '.csv';
   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
