@@ -1107,6 +1107,7 @@ let _gmuSortDir     = 1;     // 1 = asc, -1 = desc
 let nestingLayer  = null;
 let nestingPolygons = [];
 let regionPolygons  = [];
+const US_NAMES = new Set(['United States', 'United States of America']);
 
 // ── GMU zones ──────────────────────────────────────────────────────────────
 const GMU_COLORS = {
@@ -1465,11 +1466,14 @@ function _buildOriginTable(originMap, tbody) {
   tbody.innerHTML = '';
   const states = [], countries = [], unknowns = [];
   let usTotalCount = 0, usTotalMpw = 0;
-  const US_NAMES = new Set(['United States', 'United States of America']);
   originMap.forEach(({count, mpw}, region) => {
     const rp = regionPolygons.find(x => x.name === region);
-    if ((rp && rp.kind === 'state') || US_NAMES.has(region)) {
-      if (rp && rp.kind === 'state') states.push([region, count, mpw]);
+    const isState = !!(rp && rp.kind === 'state');
+    if (isState || US_NAMES.has(region)) {
+      // Points that resolve to the bare US country outline (too far offshore
+      // to snap to a state coastline) still get a visible row here, so the
+      // "United States" rollup below always equals the sum of these rows.
+      states.push([isState ? region : 'United States (unspecified)', count, mpw]);
       usTotalCount += count; usTotalMpw += mpw;
     } else if (!region || region === 'Unknown') {
       unknowns.push([region || 'Unknown', count, mpw]);
@@ -1529,10 +1533,33 @@ function _ringMinDistSq(lat, lon, ring) {
   return best;
 }
 
+// State polygons are simplified and have coastline gaps (bays, barrier
+// islands) that the coarser country outline still covers. A point can
+// therefore land inside "United States of America" without landing inside
+// any state ring. Snap those points to the nearest state coastline within
+// this tolerance so they don't get lumped into an unattributed US total.
+const US_STATE_SNAP_DEG = 1.1; // ~120km; covers observed gaps up to ~1.01deg (e.g. Dry Tortugas, FL/GA line) without reaching into open-ocean starts 3+ deg out
+
+function _nearestStateWithin(lat, lon, maxDeg) {
+  let bestName = '', bestDist = maxDeg * maxDeg;
+  for (const r of regionPolygons) {
+    if (r.kind !== 'state') continue;
+    if (lat < r.minLat - maxDeg || lat > r.maxLat + maxDeg || lon < r.minLon - maxDeg || lon > r.maxLon + maxDeg) continue;
+    for (const ring of r.rings) {
+      const d2 = _ringMinDistSq(lat, lon, ring);
+      if (d2 < bestDist) { bestDist = d2; bestName = r.name; }
+    }
+  }
+  return bestName;
+}
+
 function nearestStartRegion(lat, lon) {
   for (const r of regionPolygons) {
     if (lat < r.minLat || lat > r.maxLat || lon < r.minLon || lon > r.maxLon) continue;
-    if (r.rings.some(ring => _pointInRing(lon, lat, ring))) return r.name;
+    if (r.rings.some(ring => _pointInRing(lon, lat, ring))) {
+      if (US_NAMES.has(r.name)) return _nearestStateWithin(lat, lon, US_STATE_SNAP_DEG) || r.name;
+      return r.name;
+    }
   }
   for (const pad of [2, 5, 15, 1000]) {
     let bestName = '', bestDist = Infinity;
@@ -1543,7 +1570,10 @@ function nearestStartRegion(lat, lon) {
         if (d2 < bestDist) { bestDist = d2; bestName = r.name; }
       }
     }
-    if (bestName) return bestName;
+    if (bestName) {
+      if (US_NAMES.has(bestName)) return _nearestStateWithin(lat, lon, US_STATE_SNAP_DEG) || bestName;
+      return bestName;
+    }
   }
   return 'Unknown';
 }
@@ -2884,7 +2914,6 @@ function downloadOriginCSV() {
   });
   beaches.sort((a, b) => a.localeCompare(b));
 
-  const US_NAMES = new Set(['United States', 'United States of America']);
   const stats = new Map(); // beach -> region -> {count, mpw}
   const countries = new Set();
   const states = new Set();
@@ -2898,8 +2927,12 @@ function downloadOriginCSV() {
     const e = bm.get(region); e.count++; e.mpw += (p.mpw || 0);
 
     const rp = regionPolygons.find(x => x.name === region);
-    if ((rp && rp.kind === 'state') || US_NAMES.has(region)) {
-      if (rp && rp.kind === 'state') states.add(region);
+    const isState = !!(rp && rp.kind === 'state');
+    if (isState || US_NAMES.has(region)) {
+      // Points that never snapped to a state (too far offshore) still get
+      // their own column, so summing the state columns always matches the
+      // 'United States' rollup column.
+      states.add(isState ? region : 'United States (unspecified)');
     } else {
       countries.add(region);
     }
@@ -2915,6 +2948,11 @@ function downloadOriginCSV() {
     if (region === 'United States') {
       let count = 0, mpw = 0;
       bm.forEach((v, r) => { if (US_NAMES.has(r) || states.has(r)) { count += v.count; mpw += v.mpw; } });
+      return { count, mpw };
+    }
+    if (region === 'United States (unspecified)') {
+      let count = 0, mpw = 0;
+      bm.forEach((v, r) => { if (US_NAMES.has(r)) { count += v.count; mpw += v.mpw; } });
       return { count, mpw };
     }
     return bm.get(region) || { count: 0, mpw: 0 };
