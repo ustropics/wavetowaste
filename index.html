@@ -93,6 +93,7 @@
     font-size: 12px; font-weight: 600; cursor: pointer;
     transition: all 0.2s; white-space: nowrap; flex-shrink: 0;
     display: flex; align-items: center; gap: 6px;
+    text-decoration: none;
   }
   .navbar-btn:hover { background: var(--accent-dim); border-color: rgba(0, 136, 122, 0.4); color: var(--accent); }
   .navbar-btn.active { background: var(--accent-dim); border-color: rgba(0, 136, 122, 0.45); color: var(--accent); }
@@ -461,7 +462,7 @@
     color: var(--text-primary); font-family: 'DM Sans', sans-serif;
     font-size: 13px; font-weight: 600; cursor: pointer;
     transition: all 0.18s; display: flex; align-items: center; gap: 7px;
-    white-space: nowrap;
+    white-space: nowrap; text-decoration: none;
   }
   .drawer-btn:hover      { background: var(--accent-dim); border-color: rgba(0, 136, 122,0.4); color: var(--accent); }
   .drawer-btn.active     { background: var(--accent-dim); border-color: rgba(0, 136, 122,0.45); color: var(--accent); }
@@ -688,6 +689,14 @@
     Charts
   </button>
 
+  <div class="navbar-sep"></div>
+
+  <!-- Origin charts page -->
+  <a class="navbar-btn" href="origin_charts.html">
+    <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 8l-5 5-3-3-4 4"/></svg>
+    Origin Charts
+  </a>
+
   <!-- Mobile hamburger (hidden on desktop via CSS) -->
   <button id="mobileMenuBtn" onclick="toggleMobileMenu()" aria-label="Open menu" aria-expanded="false">
     <svg id="hamburgerIcon" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -707,7 +716,6 @@
       </div>
     </div>
 
-# Tools section for drawing, nesting show chart, open chart tray function
     <div class="drawer-section">
       <div class="drawer-label">Tools</div>
       <div class="drawer-row">
@@ -727,6 +735,10 @@
           <svg viewBox="0 0 24 24"><circle cx="6" cy="16" r="1.5"/><circle cx="11" cy="10" r="1.5"/><circle cx="16" cy="13" r="1.5"/><circle cx="19" cy="6" r="1.5"/><line x1="3" y1="21" x2="21" y2="21"/><line x1="3" y1="3" x2="3" y2="21"/></svg>
           Charts
         </button>
+        <a class="drawer-btn" href="origin_charts.html">
+          <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 8l-5 5-3-3-4 4"/></svg>
+          Origin Charts
+        </a>
       </div>
     </div>
 
@@ -1453,6 +1465,7 @@ function buildRegionIndex() {
 }
 
 function zoomToRegion(name) {
+  if (name === 'Global Particles') return; // no single coastline to zoom to
   const r = regionPolygons.find(x => x.name === name);
   if (r) { map.flyToBounds([[r.minLat, r.minLon], [r.maxLat, r.maxLon]], { maxZoom: 7, padding: [30, 30] }); return; }
   // fallback: zoom to all matching states if name is 'United States'
@@ -1540,6 +1553,13 @@ function _ringMinDistSq(lat, lon, ring) {
 // this tolerance so they don't get lumped into an unattributed US total.
 const US_STATE_SNAP_DEG = 1.1; // ~120km; covers observed gaps up to ~1.01deg (e.g. Dry Tortugas, FL/GA line) without reaching into open-ocean starts 3+ deg out
 
+// Points whose backtracked start falls outside every region polygon (mid-ocean,
+// outside the model domain) still get a "nearest country" from the fallback
+// search below. Past this radius that nearest country isn't a real match — it's
+// just whichever coastline happens to be least far away — so cap it and label
+// those points explicitly instead of misattributing them to a country.
+const REGION_FALLBACK_MAX_DEG = 1.0; // ~110km
+
 function _nearestStateWithin(lat, lon, maxDeg) {
   let bestName = '', bestDist = maxDeg * maxDeg;
   for (const r of regionPolygons) {
@@ -1571,6 +1591,7 @@ function nearestStartRegion(lat, lon) {
       }
     }
     if (bestName) {
+      if (Math.sqrt(bestDist) > REGION_FALLBACK_MAX_DEG) return 'Global Particles';
       if (US_NAMES.has(bestName)) return _nearestStateWithin(lat, lon, US_STATE_SNAP_DEG) || bestName;
       return bestName;
     }

@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Origin Charts — Wave to Waste</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #0a0f14;
+    --bg-panel: #0f1923;
+    --text-primary: #e8edf2;
+    --text-secondary: #7a8fa3;
+    --text-muted: #566577;
+    --accent: #00887a;
+    --accent-rgb: 0, 136, 122;
+    --accent-dim: rgba(0, 136, 122, 0.15);
+    --danger: #ff6b6b;
+    --border: rgba(255,255,255,0.08);
+    --grid: rgba(255,255,255,0.07);
+    --navbar-h: 52px;
+
+    /* dataviz categorical series (validated: adjacent-pair CVD ok on dark surface) */
+    --series-us:  #3987e5;
+    --series-ht:  #d95926;
+    --series-jm:  #199e70;
+    --series-ve:  #c98500;
+    --series-tt:  #d55181;
+    --series-dr:  #1fae1f;
+    --series-other: #6b7686;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; }
+
+  #navbar {
+    position: sticky; top: 0; z-index: 200;
+    height: var(--navbar-h);
+    background: rgba(10, 15, 20, 0.97);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 16px; gap: 10px;
+  }
+  .navbar-brand { font-size: 12px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--accent); white-space: nowrap; }
+  .navbar-sep { width: 1px; height: 24px; background: var(--border); }
+  .navbar-back {
+    padding: 6px 12px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+    color: var(--text-primary); font-size: 12px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .navbar-back:hover { background: var(--accent-dim); border-color: rgba(0,136,122,0.4); color: var(--accent); }
+
+  .page { max-width: 1180px; margin: 0 auto; padding: 28px 24px 70px; }
+  h1 { font-size: 20px; font-weight: 700; margin: 0 0 4px; }
+  .subtitle { color: var(--text-secondary); font-size: 13px; margin: 0 0 20px; line-height: 1.55; max-width: 780px; }
+
+  .filter-row {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 22px; padding: 10px 12px;
+    background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px;
+  }
+  .filter-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-right: 2px; font-family: 'JetBrains Mono', monospace; }
+  .segmented { display: inline-flex; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; padding: 2px; gap: 2px; }
+  .segmented button {
+    appearance: none; border: none; background: transparent; color: var(--text-secondary);
+    font: inherit; font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: 6px; cursor: pointer;
+  }
+  .segmented button.active { background: var(--accent-dim); color: var(--accent); box-shadow: 0 0 0 1px rgba(0,136,122,0.4) inset; }
+  .segmented button:not(.active):hover { background: rgba(255,255,255,0.06); }
+  .segmented button:disabled { opacity: 0.5; cursor: wait; }
+
+  .card {
+    background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px 20px 12px; margin-bottom: 26px; position: relative;
+  }
+  .card-head { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 4px; }
+  .card-title { font-size: 14.5px; font-weight: 700; margin: 0; }
+  .card-note { font-size: 12px; color: var(--text-secondary); margin: 0 0 14px; }
+  .card-controls { display: flex; align-items: center; gap: 8px; }
+  .table-toggle {
+    font-size: 11.5px; color: var(--text-secondary); background: none; border: 1px solid var(--border);
+    border-radius: 6px; padding: 5px 10px; cursor: pointer; font-family: inherit;
+  }
+  .table-toggle:hover { background: rgba(255,255,255,0.06); }
+
+  svg.chart { display: block; width: 100%; height: auto; overflow: visible; }
+  .bar-seg { cursor: pointer; }
+  .bar-seg:hover { filter: brightness(1.12); }
+  .axis-text { fill: var(--text-muted); font-size: 10.5px; font-family: 'JetBrains Mono', monospace; }
+  .axis-line { stroke: rgba(255,255,255,0.18); stroke-width: 1; }
+  .grid-line { stroke: var(--grid); stroke-width: 1; }
+  .beach-label { fill: var(--text-secondary); font-size: 10px; }
+  .value-label { fill: var(--text-primary); font-size: 10.5px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 14px 2px 8px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-secondary); }
+  .legend-swatch { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+
+  .tooltip {
+    position: fixed; pointer-events: none; z-index: 500;
+    background: #1a1a19; color: #fff;
+    font-size: 12px; line-height: 1.45; padding: 8px 10px; border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4); opacity: 0; transition: opacity 0.08s;
+    max-width: 240px; border: 1px solid rgba(255,255,255,0.1);
+  }
+  .tooltip.show { opacity: 1; }
+  .tooltip .t-title { font-weight: 700; margin-bottom: 3px; }
+  .tooltip .t-row { display: flex; justify-content: space-between; gap: 12px; }
+  .tooltip .t-val { font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+  .data-table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-top: 10px; display: none; }
+  .data-table.show { display: table; }
+  .data-table th, .data-table td { padding: 5px 8px; text-align: right; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+  .data-table th:first-child, .data-table td:first-child { text-align: left; }
+  .data-table th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.3px; }
+  .data-table td { color: var(--text-secondary); font-variant-numeric: tabular-nums; font-family: 'JetBrains Mono', monospace; }
+  .data-table tr:last-child td { border-bottom: none; }
+  .chart-wrap.hidden-for-table { display: none; }
+
+  .foot-note { font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+
+  .card-loading {
+    position: absolute; inset: 0; z-index: 50; border-radius: 12px;
+    background: rgba(15,25,35,0.85); backdrop-filter: blur(2px);
+    display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  }
+  .card-loading.show { display: flex; }
+  .card-loading .spinner {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 3px solid rgba(0,136,122,0.15); border-top-color: var(--accent);
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .card-loading .msg { font-size: 12px; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; }
+  .card-loading .err { color: var(--danger); font-size: 12px; text-align: center; max-width: 320px; font-family: 'JetBrains Mono', monospace; }
+</style>
+</head>
+<body>
+
+<div id="navbar">
+  <span class="navbar-brand">Wave to Waste</span>
+  <div class="navbar-sep"></div>
+  <a class="navbar-back" href="index.html">&larr; Back to map</a>
+</div>
+
+<div class="page">
+  <div class="filter-row">
+    <span class="filter-label">Model</span>
+    <div class="segmented" id="modelSeg">
+      <button data-model="mc" class="active">Monte Carlo</button>
+      <button data-model="det">Deterministic</button>
+      <button data-model="stoch">Stochastic</button>
+    </div>
+    <span class="foot-note" id="modelNote"></span>
+  </div>
+
+  <!-- Chart 1 -->
+  <div class="card">
+    <div class="card-head">
+      <h2 class="card-title">Proportion of contribution by origin, per beach</h2>
+      <div class="card-controls">
+        <span class="filter-label">Metric</span>
+        <div class="segmented" id="metricSeg">
+          <button data-metric="mpw" class="active">MPW (tons)</button>
+          <button data-metric="count">Particle count</button>
+        </div>
+        <button class="table-toggle" id="c1TableToggle">View as table</button>
+        <button class="table-toggle" id="c1DownloadImg">Download image</button>
+      </div>
+    </div>
+    <p class="card-note">Each bar sums to 100% of that beach's total, split by simulated origin.</p>
+    <div class="chart-wrap" id="c1ChartWrap">
+      <svg class="chart" id="chart1"></svg>
+      <div class="legend" id="legend1"></div>
+    </div>
+    <table class="data-table" id="table1"></table>
+    <div class="card-loading" id="loading1"><div class="spinner"></div><div class="msg" id="loadingMsg1"></div></div>
+  </div>
+
+  <!-- Chart 2 -->
+  <div class="card">
+    <div class="card-head">
+      <h2 class="card-title">Particle frequency by origin, summed across all 24 beaches</h2>
+      <div class="card-controls">
+        <button class="table-toggle" id="c2TableToggle">View as table</button>
+        <button class="table-toggle" id="c2DownloadImg">Download image</button>
+      </div>
+    </div>
+    <p class="card-note">Total particle count reaching this beach set, grouped by simulated start country.</p>
+    <div class="chart-wrap" id="c2ChartWrap">
+      <svg class="chart" id="chart2"></svg>
+    </div>
+    <table class="data-table" id="table2"></table>
+    <div class="card-loading" id="loading2"><div class="spinner"></div><div class="msg" id="loadingMsg2"></div></div>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+if (!window._FLORIDA_DATA) window._FLORIDA_DATA = {};
+const _loadedScripts = new Set();
+
+const DATA_FILES = {
+  mc:    ["florida_mc_data_1.js", "florida_mc_data_2.js", "florida_mc_data_3.js"],
+  det:   ["florida_det_data_1.js", "florida_det_data_2.js"],
+  stoch: ["florida_stoch_data_1.js", "florida_stoch_data_2.js", "florida_stoch_data_3.js"],
+};
+
+function _loadScript(src, bust) {
+  return new Promise((resolve, reject) => {
+    if (!bust && _loadedScripts.has(src)) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = bust ? src + (src.includes('?') ? '&' : '?') + '_retry=' + Date.now() : src;
+    s.onload = () => { _loadedScripts.add(src); resolve(); };
+    s.onerror = () => reject(new Error('Failed to load: ' + src));
+    document.head.appendChild(s);
+  });
+}
+
+// Mirrors index.html's _loadDataset: verifies the particle count against the
+// embedded stats total and retries with a cache-busting URL, since a large
+// data file occasionally truncates mid-download without throwing.
+async function _loadDataset(key, maxAttempts = 3) {
+  const files = DATA_FILES[key];
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    for (const f of files) await _loadScript(f, attempt > 1);
+    const data = window._FLORIDA_DATA[key];
+    const expected = data && data.stats && data.stats.total_particles;
+    const actual = (data && data.particles && data.particles.length) || 0;
+    if (expected == null || actual === expected) return;
+    console.warn('[' + key + '] loaded ' + actual + '/' + expected + ' particles (attempt ' + attempt + '/' + maxAttempts + '), retrying…');
+    files.forEach(f => _loadedScripts.delete(f));
+  }
+  const data = window._FLORIDA_DATA[key];
+  const actual = (data && data.particles && data.particles.length) || 0;
+  const expected = (data && data.stats && data.stats.total_particles) || '?';
+  throw new Error('Only loaded ' + actual + ' of ' + expected + ' ' + key.toUpperCase() +
+    ' particles after ' + maxAttempts + ' attempts.');
+}
+
+// ── Origin matching (same logic as index.html: nearestStartRegion / nearestNestingBeach) ──
+function _arrMin(arr){let m=Infinity;for(let i=0;i<arr.length;i++)if(arr[i]<m)m=arr[i];return m;}
+function _arrMax(arr){let m=-Infinity;for(let i=0;i<arr.length;i++)if(arr[i]>m)m=arr[i];return m;}
+function _pointInRing(lon, lat, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+    if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi)) inside = !inside;
+  }
+  return inside;
+}
+function _ringMinDistSq(lat, lon, ring) {
+  let best = Infinity;
+  for (let i = 0; i < ring.length - 1; i++) {
+    const [x1, y1] = ring[i], [x2, y2] = ring[i + 1];
+    const dx = x2 - x1, dy = y2 - y1, lenSq = dx * dx + dy * dy;
+    let t = lenSq > 0 ? ((lon - x1) * dx + (lat - y1) * dy) / lenSq : 0;
+    t = Math.max(0, Math.min(1, t));
+    const d2 = (lat - (y1 + t * dy)) ** 2 + (lon - (x1 + t * dx)) ** 2;
+    if (d2 < best) best = d2;
+  }
+  return best;
+}
+const US_NAMES = new Set(['United States', 'United States of America']);
+// State polygons have coastline gaps the coarser country outline still covers
+// (see nearestStartRegion in index.html); snap those points to the nearest
+// state within this tolerance instead of leaving them unattributed.
+const US_STATE_SNAP_DEG = 1.1;
+// Beyond this, the "nearest" region from the fallback search below isn't a
+// real match — see REGION_FALLBACK_MAX_DEG in index.html.
+const REGION_FALLBACK_MAX_DEG = 1.0; // ~110km
+let regionPolygons = [];
+let nestingPolygons = [];
+
+function _nearestStateWithin(lat, lon, maxDeg) {
+  let bestName = '', bestDist = maxDeg * maxDeg;
+  for (const r of regionPolygons) {
+    if (r.kind !== 'state') continue;
+    if (lat < r.minLat - maxDeg || lat > r.maxLat + maxDeg || lon < r.minLon - maxDeg || lon > r.maxLon + maxDeg) continue;
+    for (const ring of r.rings) {
+      const d2 = _ringMinDistSq(lat, lon, ring);
+      if (d2 < bestDist) { bestDist = d2; bestName = r.name; }
+    }
+  }
+  return bestName;
+}
+function nearestStartRegion(lat, lon) {
+  for (const r of regionPolygons) {
+    if (lat < r.minLat || lat > r.maxLat || lon < r.minLon || lon > r.maxLon) continue;
+    if (r.rings.some(ring => _pointInRing(lon, lat, ring))) {
+      if (US_NAMES.has(r.name)) return _nearestStateWithin(lat, lon, US_STATE_SNAP_DEG) || r.name;
+      return r.name;
+    }
+  }
+  for (const pad of [2, 5, 15, 1000]) {
+    let bestName = '', bestDist = Infinity;
+    for (const r of regionPolygons) {
+      if (lat < r.minLat - pad || lat > r.maxLat + pad || lon < r.minLon - pad || lon > r.maxLon + pad) continue;
+      for (const ring of r.rings) {
+        const d2 = _ringMinDistSq(lat, lon, ring);
+        if (d2 < bestDist) { bestDist = d2; bestName = r.name; }
+      }
+    }
+    if (bestName) {
+      if (Math.sqrt(bestDist) > REGION_FALLBACK_MAX_DEG) return 'Global Particles';
+      if (US_NAMES.has(bestName)) return _nearestStateWithin(lat, lon, US_STATE_SNAP_DEG) || bestName;
+      return bestName;
+    }
+  }
+  return 'Unknown';
+}
+function countryBucket(region) {
+  const rp = regionPolygons.find(x => x.name === region);
+  if ((rp && rp.kind === 'state') || US_NAMES.has(region)) return 'United States';
+  return region;
+}
+function nearestNestingBeach(lat, lon) {
+  const THRESH = 0.018;
+  let bestName = "", bestDist = THRESH * THRESH;
+  for (const zone of nestingPolygons) {
+    if (lat < zone.minLat || lat > zone.maxLat || lon < zone.minLon || lon > zone.maxLon) continue;
+    for (let i = 0; i < zone.coords.length - 1; i++) {
+      const [x1,y1] = zone.coords[i], [x2,y2] = zone.coords[i+1];
+      const dx=x2-x1, dy=y2-y1, lenSq=dx*dx+dy*dy;
+      let t = lenSq > 0 ? ((lon-x1)*dx+(lat-y1)*dy)/lenSq : 0;
+      t = Math.max(0, Math.min(1, t));
+      const px=x1+t*dx, py=y1+t*dy;
+      const d2 = (lat-py)**2 + (lon-px)**2;
+      if (d2 < bestDist) { bestDist = d2; bestName = zone.props.Beach || "Unknown"; }
+    }
+  }
+  return bestName;
+}
+
+const TARGET_BEACHES = [
+  "Coral Cove Park","Gulfstream","Gulfstream Park","Highland Beach",
+  "Hobe Sound National Wildlife Refuge","Hutchinson Island (North)",
+  "Jupiter Beach (North)","Jupiter Inlet Colony","Jupiter Island",
+  "Lake Worth Municipal Beach","Lantana","Manalapan (North)","Mid Reach Beach",
+  "Ocean Reef Park","Ocean Ridge (South)","Palm Beach Island (North)",
+  "Palm Beach Shores","Saint Lucie County Beaches (North)",
+  "Saint Lucie Inlet State Park","Singer Island (Oasis Condos)",
+  "Singer Island (South)","South Palm Beach","South Reach Beach","Tequesta Beaches"
+];
+const targetSet = new Set(TARGET_BEACHES);
+
+const CATS = [
+  { key: "United States", label: "United States", cssVar: "--series-us" },
+  { key: "Haiti", label: "Haiti", cssVar: "--series-ht" },
+  { key: "Jamaica", label: "Jamaica", cssVar: "--series-jm" },
+  { key: "Venezuela", label: "Venezuela", cssVar: "--series-ve" },
+  { key: "Trinidad and Tobago", label: "Trinidad & Tobago", cssVar: "--series-tt" },
+  { key: "Dominican Rep.", label: "Dominican Rep.", cssVar: "--series-dr" },
+  { key: "Other", label: "Other", cssVar: "--series-other" }
+];
+const TOP_KEYS = CATS.slice(0, 6).map(c => c.key);
+
+// beach -> country -> {count, mpw}, plus aggregate totals, for one model's particles
+function computeModelData(particles) {
+  const beachCountry = new Map();
+  TARGET_BEACHES.forEach(b => beachCountry.set(b, new Map()));
+  const totalsCount = {}, totalsMpw = {};
+
+  for (const p of particles) {
+    const beach = nearestNestingBeach(p.lat, p.lon);
+    if (!targetSet.has(beach)) continue;
+    const region = nearestStartRegion(p.start_lat, p.start_lon);
+    const country = countryBucket(region);
+    const cm = beachCountry.get(beach);
+    if (!cm.has(country)) cm.set(country, { count: 0, mpw: 0 });
+    const e = cm.get(country);
+    e.count++;
+    e.mpw += (p.mpw || 0);
+    totalsCount[country] = (totalsCount[country] || 0) + 1;
+    totalsMpw[country] = (totalsMpw[country] || 0) + (p.mpw || 0);
+  }
+
+  const perBeach = {};
+  beachCountry.forEach((cm, beach) => {
+    perBeach[beach] = {};
+    cm.forEach((v, country) => { perBeach[beach][country] = v; });
+  });
+  return { perBeach, totalsCount, totalsMpw, particleCount: particles.length };
+}
+
+// ---------- chart state & rendering ----------
+const state = { model: "mc", metric: "mpw" };
+const computedCache = {}; // model -> computed data
+
+let indicesReady = null;
+async function ensureIndicesReady() {
+  if (indicesReady) return indicesReady;
+  indicesReady = (async () => {
+    await _loadScript('florida_regions.js');
+    await _loadScript('florida_nesting_zones.js');
+    regionPolygons = window._REGIONS_GEOJSON.features.map(f => {
+      const g = f.geometry;
+      const polys = g.type === 'Polygon' ? [g.coordinates] : g.coordinates;
+      const rings = polys.map(poly => poly[0]);
+      const lats = [], lons = [];
+      rings.forEach(ring => ring.forEach(([lon, lat]) => { lats.push(lat); lons.push(lon); }));
+      return { name: f.properties.name, kind: f.properties.kind,
+        minLat: _arrMin(lats), maxLat: _arrMax(lats), minLon: _arrMin(lons), maxLon: _arrMax(lons), rings };
+    });
+    nestingPolygons = window._NESTING_GEOJSON.features.map(f => {
+      const coords = [];
+      const g = f.geometry;
+      if (g.type === "LineString") coords.push(...g.coordinates);
+      else if (g.type === "MultiLineString") g.coordinates.forEach(r => coords.push(...r));
+      const lats = coords.map(c => c[1]), lons = coords.map(c => c[0]);
+      return { props: f.properties,
+        minLat: _arrMin(lats)-0.018, maxLat: _arrMax(lats)+0.018,
+        minLon: _arrMin(lons)-0.018, maxLon: _arrMax(lons)+0.018, coords };
+    });
+  })();
+  return indicesReady;
+}
+
+async function ensureModelData(model) {
+  if (computedCache[model]) return computedCache[model];
+  await ensureIndicesReady();
+  await _loadDataset(model);
+  const particles = window._FLORIDA_DATA[model].particles;
+  const computed = computeModelData(particles);
+  computedCache[model] = computed;
+  return computed;
+}
+
+const tooltip = document.getElementById("tooltip");
+function showTooltip(x, y, titleText, rows){
+  tooltip.innerHTML = "";
+  const t = document.createElement("div");
+  t.className = "t-title";
+  t.textContent = titleText;
+  tooltip.appendChild(t);
+  rows.forEach(r => {
+    const row = document.createElement("div");
+    row.className = "t-row";
+    const lab = document.createElement("span"); lab.textContent = r[0];
+    const val = document.createElement("span"); val.className = "t-val"; val.textContent = r[1];
+    row.appendChild(lab); row.appendChild(val);
+    tooltip.appendChild(row);
+  });
+  tooltip.style.left = "0px"; tooltip.style.top = "0px";
+  tooltip.classList.add("show");
+  const rect = tooltip.getBoundingClientRect();
+  const vw = window.innerWidth, vh = window.innerHeight, pad = 14;
+  let left = x + pad, top = y + pad;
+  if (left + rect.width > vw - 8) left = x - rect.width - pad;
+  if (top + rect.height > vh - 8) top = y - rect.height - pad;
+  tooltip.style.left = left + "px";
+  tooltip.style.top = top + "px";
+}
+function hideTooltip(){ tooltip.classList.remove("show"); }
+
+const SVGNS = "http://www.w3.org/2000/svg";
+function el(tag, attrs){
+  const e = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) {
+    const v = attrs[k];
+    if ((k === "fill" || k === "stroke") && typeof v === "string" && v.indexOf("var(") === 0) {
+      e.style[k] = v;
+    } else {
+      e.setAttribute(k, v);
+    }
+  }
+  return e;
+}
+function fmt(n){ return Math.round(n).toLocaleString("en-US"); }
+function fmtTons(n){ return n.toFixed(1) + " t"; }
+
+function bucketBeach(rawCountryMap, metric){
+  const out = {}; CATS.forEach(c => out[c.key] = 0);
+  let total = 0;
+  Object.keys(rawCountryMap || {}).forEach(country => {
+    const v = rawCountryMap[country][metric];
+    total += v;
+    const bucket = TOP_KEYS.indexOf(country) >= 0 ? country : "Other";
+    out[bucket] += v;
+  });
+  return { values: out, total };
+}
+
+function renderLegend(container, cats){
+  container.innerHTML = "";
+  cats.forEach(c => {
+    const item = document.createElement("div");
+    item.className = "legend-item";
+    const sw = document.createElement("span");
+    sw.className = "legend-swatch";
+    sw.style.background = "var(" + c.cssVar + ")";
+    const lab = document.createElement("span");
+    lab.textContent = c.label;
+    item.appendChild(sw); item.appendChild(lab);
+    container.appendChild(item);
+  });
+}
+
+function renderChart1(data){
+  const metric = state.metric;
+  const perBeach = data.perBeach;
+  const svg = document.getElementById("chart1");
+  svg.innerHTML = "";
+
+  const n = TARGET_BEACHES.length;
+  const bandW = 42, barW = 22;
+  const marginL = 42, marginR = 8, marginT = 10, marginB = 150;
+  const plotH = 320;
+  const plotW = n * bandW;
+  svg.setAttribute("viewBox", "0 0 " + (marginL+plotW+marginR) + " " + (marginT+plotH+marginB));
+
+  [0,25,50,75,100].forEach(p => {
+    const y = marginT + plotH - (p/100)*plotH;
+    svg.appendChild(el("line", { x1: marginL, x2: marginL+plotW, y1: y, y2: y, class: p===0 ? "axis-line" : "grid-line" }));
+    const t = el("text", { x: marginL-8, y: y+3, class: "axis-text", "text-anchor": "end" });
+    t.textContent = p + "%";
+    svg.appendChild(t);
+  });
+
+  TARGET_BEACHES.forEach((beach, i) => {
+    const bx = marginL + i*bandW + (bandW-barW)/2;
+    const raw = perBeach[beach] || {};
+    const b = bucketBeach(raw, metric);
+    const total = b.total;
+    let y = marginT + plotH;
+    const segCount = CATS.filter(c => b.values[c.key] > 0).length;
+    let segIdx = 0;
+
+    if (total <= 0) {
+      svg.appendChild(el("rect", { x: bx, y: marginT+plotH-2, width: barW, height: 2, fill: "var(--text-muted)", opacity: 0.5 }));
+    } else {
+      CATS.forEach(c => {
+        const v = b.values[c.key];
+        if (v <= 0) return;
+        const pct = v/total*100;
+        const segH = (pct/100)*plotH;
+        const isLast = (segIdx === segCount-1);
+        const isFirst = (segIdx === 0);
+        const gapTop = 1, gapBot = isFirst ? 0 : 1;
+        const ry0 = y - segH;
+        const rectY = ry0 + gapTop;
+        const rectH = Math.max(0, segH - gapTop - gapBot);
+        let rect;
+        if (isLast && rectH > 0) {
+          const rr = 4;
+          const pathD = "M" + bx + "," + (rectY+Math.min(rr,rectH)) +
+            " Q" + bx + "," + rectY + " " + (bx+rr) + "," + rectY +
+            " L" + (bx+barW-rr) + "," + rectY +
+            " Q" + (bx+barW) + "," + rectY + " " + (bx+barW) + "," + (rectY+Math.min(rr,rectH)) +
+            " L" + (bx+barW) + "," + (rectY+rectH) +
+            " L" + bx + "," + (rectY+rectH) + " Z";
+          rect = el("path", { d: pathD, fill: "var(" + c.cssVar + ")", class: "bar-seg" });
+        } else {
+          rect = el("rect", { x: bx, y: rectY, width: barW, height: rectH, fill: "var(" + c.cssVar + ")", class: "bar-seg" });
+        }
+        rect.addEventListener("pointerenter", evt => {
+          const valStr = metric === "mpw" ? fmtTons(v) : fmt(v) + " particles";
+          showTooltip(evt.clientX, evt.clientY, beach, [[c.label, valStr], ["Share of beach total", pct.toFixed(1) + "%"]]);
+        });
+        rect.addEventListener("pointermove", evt => {
+          tooltip.style.left = (evt.clientX+14) + "px";
+          tooltip.style.top = (evt.clientY+14) + "px";
+        });
+        rect.addEventListener("pointerleave", hideTooltip);
+        svg.appendChild(rect);
+        y = ry0;
+        segIdx++;
+      });
+    }
+
+    const lbl = el("text", {
+      x: 0, y: 0, class: "beach-label",
+      transform: "translate(" + (bx+barW/2) + "," + (marginT+plotH+10) + ") rotate(-55)",
+      "text-anchor": "end"
+    });
+    lbl.textContent = beach;
+    svg.appendChild(lbl);
+  });
+
+  renderLegend(document.getElementById("legend1"), CATS);
+  renderTable1(data);
+}
+
+function renderTable1(data){
+  const metric = state.metric;
+  const perBeach = data.perBeach;
+  const table = document.getElementById("table1");
+  const head = "<tr><th>Beach</th>" + CATS.map(c => "<th>"+c.label+"</th>").join("") + "<th>Total</th></tr>";
+  const rows = TARGET_BEACHES.map(beach => {
+    const raw = perBeach[beach] || {};
+    const b = bucketBeach(raw, metric);
+    const cells = CATS.map(c => {
+      const v = b.values[c.key];
+      if (b.total <= 0) return "<td>&mdash;</td>";
+      const pct = (v/b.total*100);
+      return "<td>" + (metric==="mpw" ? v.toFixed(1) : fmt(v)) + " (" + pct.toFixed(0) + "%)</td>";
+    }).join("");
+    const totalStr = b.total <= 0 ? "0" : (metric==="mpw" ? b.total.toFixed(1)+" t" : fmt(b.total));
+    return "<tr><td>" + beach + "</td>" + cells + "<td>" + totalStr + "</td></tr>";
+  }).join("");
+  table.innerHTML = head + rows;
+}
+
+function renderChart2(data){
+  const totalsCount = data.totalsCount;
+  const svg = document.getElementById("chart2");
+  svg.innerHTML = "";
+
+  const entries = Object.keys(totalsCount)
+    .map(k => ({ key: k, value: totalsCount[k] }))
+    .sort((a,b) => b.value - a.value);
+
+  const n = entries.length;
+  const bandW = 62, barW = 34;
+  const marginL = 56, marginR = 10, marginT = 14, marginB = 84;
+  const plotH = 300;
+  const plotW = n * bandW;
+  svg.setAttribute("viewBox", "0 0 " + (marginL+plotW+marginR) + " " + (marginT+plotH+marginB));
+
+  const maxV = Math.max.apply(null, entries.map(e => e.value));
+  let niceMax = Math.ceil(maxV/500)*500;
+  if (niceMax === 0) niceMax = 100;
+  const ticks = [0, 0.25, 0.5, 0.75, 1].map(f => Math.round(niceMax*f));
+
+  ticks.forEach(tv => {
+    const y = marginT + plotH - (tv/niceMax)*plotH;
+    svg.appendChild(el("line", { x1: marginL, x2: marginL+plotW, y1: y, y2: y, class: tv===0 ? "axis-line" : "grid-line" }));
+    const t = el("text", { x: marginL-8, y: y+3, class: "axis-text", "text-anchor": "end" });
+    t.textContent = tv.toLocaleString("en-US");
+    svg.appendChild(t);
+  });
+
+  entries.forEach((e, i) => {
+    const bx = marginL + i*bandW + (bandW-barW)/2;
+    const h = (e.value/niceMax)*plotH;
+    const y = marginT + plotH - h;
+    const rr = 4;
+    const pathD = h > rr
+      ? "M" + bx + "," + (y+rr) +
+        " Q" + bx + "," + y + " " + (bx+rr) + "," + y +
+        " L" + (bx+barW-rr) + "," + y +
+        " Q" + (bx+barW) + "," + y + " " + (bx+barW) + "," + (y+rr) +
+        " L" + (bx+barW) + "," + (marginT+plotH) +
+        " L" + bx + "," + (marginT+plotH) + " Z"
+      : "M" + bx + "," + y + " L" + (bx+barW) + "," + y + " L" + (bx+barW) + "," + (marginT+plotH) + " L" + bx + "," + (marginT+plotH) + " Z";
+    const bar = el("path", { d: pathD, fill: "var(--series-us)", class: "bar-seg" });
+    bar.addEventListener("pointerenter", evt => showTooltip(evt.clientX, evt.clientY, e.key, [["Particles", fmt(e.value)]]));
+    bar.addEventListener("pointermove", evt => {
+      tooltip.style.left = (evt.clientX+14) + "px";
+      tooltip.style.top = (evt.clientY+14) + "px";
+    });
+    bar.addEventListener("pointerleave", hideTooltip);
+    svg.appendChild(bar);
+
+    const valLbl = el("text", { x: bx+barW/2, y: y-6, class: "value-label", "text-anchor": "middle" });
+    valLbl.textContent = fmt(e.value);
+    svg.appendChild(valLbl);
+
+    const lbl = el("text", {
+      x: 0, y: 0, class: "beach-label",
+      transform: "translate(" + (bx+barW/2) + "," + (marginT+plotH+10) + ") rotate(-45)",
+      "text-anchor": "end"
+    });
+    lbl.textContent = e.key;
+    svg.appendChild(lbl);
+  });
+
+  renderTable2(data, entries);
+}
+
+function renderTable2(data, entries){
+  const totalsMpw = data.totalsMpw;
+  const table = document.getElementById("table2");
+  const head = "<tr><th>Origin</th><th>Particles</th><th>MPW (tons)</th></tr>";
+  const rows = entries.map(e =>
+    "<tr><td>" + e.key + "</td><td>" + fmt(e.value) + "</td><td>" + (totalsMpw[e.key]||0).toFixed(1) + "</td></tr>"
+  ).join("");
+  table.innerHTML = head + rows;
+}
+
+function setLoading(show, msg, isError){
+  ["1","2"].forEach(n => {
+    document.getElementById("loading"+n).classList.toggle("show", show);
+    const m = document.getElementById("loadingMsg"+n);
+    m.textContent = msg || "";
+    m.className = isError ? "err" : "msg";
+  });
+  document.querySelectorAll("#modelSeg button").forEach(b => b.disabled = show);
+}
+
+async function renderAll(){
+  const model = state.model;
+  const cached = computedCache[model];
+  if (!cached) {
+    const files = DATA_FILES[model];
+    setLoading(true, "Loading " + model.toUpperCase() + " data… (" + files.length + " file" + (files.length>1?"s":"") + ", first load can take a while)");
+  }
+  try {
+    const data = await ensureModelData(model);
+    if (state.model !== model) return; // user switched again while loading
+    setLoading(false);
+    document.getElementById("modelNote").textContent =
+      data.particleCount.toLocaleString("en-US") + " particles in full run · model: " + model;
+    renderChart1(data);
+    renderChart2(data);
+  } catch (err) {
+    setLoading(true, "Failed to load " + model.toUpperCase() + " data: " + err.message, true);
+    console.error(err);
+  }
+}
+
+document.getElementById("modelSeg").addEventListener("click", evt => {
+  const btn = evt.target.closest("button[data-model]");
+  if (!btn) return;
+  state.model = btn.getAttribute("data-model");
+  document.querySelectorAll("#modelSeg button").forEach(b => b.classList.toggle("active", b === btn));
+  renderAll();
+});
+
+document.getElementById("metricSeg").addEventListener("click", evt => {
+  const btn = evt.target.closest("button[data-metric]");
+  if (!btn) return;
+  state.metric = btn.getAttribute("data-metric");
+  document.querySelectorAll("#metricSeg button").forEach(b => b.classList.toggle("active", b === btn));
+  const cached = computedCache[state.model];
+  if (cached) renderChart1(cached);
+});
+
+// Clone an SVG, baking every computed fill/stroke (including CSS var() and
+// stylesheet-driven colors) into plain attributes — a detached SVG string
+// has no access to the page's custom properties or stylesheet, so colors
+// would otherwise vanish on rasterization.
+function _resolvedSvgClone(svg){
+  const clone = svg.cloneNode(true);
+  const origAll = svg.querySelectorAll("*");
+  const cloneAll = clone.querySelectorAll("*");
+  origAll.forEach((o, i) => {
+    const c = cloneAll[i];
+    const cs = getComputedStyle(o);
+    // An inline style="fill:var(...)" (copied verbatim by cloneNode) outranks
+    // a plain fill="" attribute, and the var() can't resolve once this SVG is
+    // detached — so overwrite the inline style itself, not just the attribute.
+    if (cs.fill && cs.fill !== "none") { c.style.fill = cs.fill; c.setAttribute("fill", cs.fill); }
+    if (cs.stroke && cs.stroke !== "none") { c.style.stroke = cs.stroke; c.setAttribute("stroke", cs.stroke); }
+    if (cs.fontFamily) c.setAttribute("font-family", cs.fontFamily.replace(/'/g, ""));
+    if (cs.fontSize) c.setAttribute("font-size", cs.fontSize);
+    if (cs.fontWeight) c.setAttribute("font-weight", cs.fontWeight);
+  });
+  return clone;
+}
+
+const PANEL_BG = "#0f1923", INK_PRIMARY = "#e8edf2", INK_SECONDARY = "#7a8fa3";
+
+async function downloadChartImage(svgId, opts){
+  const svg = document.getElementById(svgId);
+  const [vbX, vbY, vbW, vbH] = svg.getAttribute("viewBox").split(" ").map(Number);
+  const scale = 2;
+  const pad = 24 * scale;
+  const titleH = 34 * scale;
+  const legendH = opts.legendCats ? 30 * scale : 0;
+  const W = Math.ceil(vbW * scale) + pad * 2;
+  const H = Math.ceil(vbH * scale) + pad * 2 + titleH + legendH;
+
+  const clone = _resolvedSvgClone(svg);
+  clone.setAttribute("width", vbW);
+  clone.setAttribute("height", vbH);
+  clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  const bgRect = document.createElementNS(SVGNS, "rect");
+  bgRect.setAttribute("x", vbX); bgRect.setAttribute("y", vbY);
+  bgRect.setAttribute("width", vbW); bgRect.setAttribute("height", vbH);
+  bgRect.setAttribute("fill", PANEL_BG);
+  clone.insertBefore(bgRect, clone.firstChild);
+
+  const svgStr = new XMLSerializer().serializeToString(clone);
+  const svgBlob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(svgBlob);
+  try {
+    const img = new Image();
+    await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = url; });
+
+    const canvas = document.createElement("canvas");
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = PANEL_BG;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.fillStyle = INK_PRIMARY;
+    ctx.font = "700 " + (15 * scale) + "px 'DM Sans', sans-serif";
+    ctx.textBaseline = "top";
+    ctx.fillText(opts.title, pad, pad * 0.6);
+
+    const chartY = pad + titleH;
+    ctx.drawImage(img, pad, chartY, vbW * scale, vbH * scale);
+
+    if (opts.legendCats) {
+      let lx = pad, ly = chartY + vbH * scale + 14 * scale;
+      const swSize = 10 * scale;
+      ctx.font = (11 * scale) + "px 'DM Sans', sans-serif";
+      opts.legendCats.forEach(c => {
+        const color = getComputedStyle(document.documentElement).getPropertyValue(c.cssVar).trim();
+        const textW = ctx.measureText(c.label).width;
+        const itemW = swSize + 6 * scale + textW + 20 * scale;
+        if (lx + itemW > W - pad) { lx = pad; ly += 22 * scale; }
+        ctx.fillStyle = color;
+        ctx.fillRect(lx, ly + swSize * 0.15, swSize, swSize);
+        ctx.fillStyle = INK_SECONDARY;
+        ctx.fillText(c.label, lx + swSize + 6 * scale, ly);
+        lx += itemW;
+      });
+    }
+
+    const pngUrl = canvas.toDataURL("image/png");
+    const a = document.createElement("a");
+    a.href = pngUrl;
+    a.download = opts.filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+document.getElementById("c1DownloadImg").addEventListener("click", () => {
+  const metricLabel = state.metric === "mpw" ? "MPW tons" : "particle count";
+  downloadChartImage("chart1", {
+    title: "Proportion of contribution by origin, per beach — " + metricLabel + ", " + state.model.toUpperCase(),
+    filename: "origin_proportion_" + state.model + "_" + state.metric + ".png",
+    legendCats: CATS
+  });
+});
+document.getElementById("c2DownloadImg").addEventListener("click", () => {
+  downloadChartImage("chart2", {
+    title: "Particle frequency by origin, all 24 beaches — " + state.model.toUpperCase(),
+    filename: "origin_frequency_" + state.model + ".png"
+  });
+});
+
+function wireTableToggle(btnId, wrapId, tableId){
+  const btn = document.getElementById(btnId);
+  const wrap = document.getElementById(wrapId);
+  const table = document.getElementById(tableId);
+  let showing = false;
+  btn.addEventListener("click", () => {
+    showing = !showing;
+    wrap.classList.toggle("hidden-for-table", showing);
+    table.classList.toggle("show", showing);
+    btn.textContent = showing ? "View as chart" : "View as table";
+  });
+}
+wireTableToggle("c1TableToggle", "c1ChartWrap", "table1");
+wireTableToggle("c2TableToggle", "c2ChartWrap", "table2");
+
+renderAll();
+</script>
+</body>
+</html>
