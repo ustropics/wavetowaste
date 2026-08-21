@@ -966,6 +966,8 @@
         <label class="toggle-compact"><input type="checkbox" id="togDots"><span class="toggle-track-sm"></span><span class="toggle-compact-label">Endpoints</span></label>
         <label class="toggle-compact" id="trajToggleRow"><input type="checkbox" id="togTrajectories"><span class="toggle-track-sm"></span><span class="toggle-compact-label">Trajectories</span></label>
         <span id="trajCapNote" style="display:none;font-size:10px;color:var(--text-secondary);grid-column:1/-1;margin-top:-4px;"></span>
+        <label class="toggle-compact"><input type="checkbox" id="togChTrajectories" onchange="rebuildChTrajectories()"><span class="toggle-track-sm"></span><span class="toggle-compact-label">CH Trajectories</span></label>
+        <span id="chTrajCapNote" style="display:none;font-size:10px;color:var(--text-secondary);grid-column:1/-1;margin-top:-4px;"></span>
         <label class="toggle-compact"><input type="checkbox" id="togNestingZones"><span class="toggle-track-sm"></span><span class="toggle-compact-label">Nesting Zones</span></label>
         <label class="toggle-compact"><input type="checkbox" id="togStartPts" onchange="rebuildStartPoints()"><span class="toggle-track-sm"></span><span class="toggle-compact-label">Start Points</span></label>
         <label class="toggle-compact"><input type="checkbox" id="togGmuZones" checked><span class="toggle-track-sm"></span><span class="toggle-compact-label">GMU Zones</span></label>
@@ -1121,6 +1123,19 @@ let nestingPolygons = [];
 let regionPolygons  = [];
 const US_NAMES = new Set(['United States', 'United States of America']);
 
+// "CH Trajectories" overlay — same 24-beach set used by origin_charts.html's
+// per-beach origin charts (TARGET_BEACHES there).
+const CH_BEACHES = new Set([
+  "Coral Cove Park","Gulfstream","Gulfstream Park","Highland Beach",
+  "Hobe Sound National Wildlife Refuge","Hutchinson Island (North)",
+  "Jupiter Beach (North)","Jupiter Inlet Colony","Jupiter Island",
+  "Lake Worth Municipal Beach","Lantana","Manalapan (North)","Mid Reach Beach",
+  "Ocean Reef Park","Ocean Ridge (South)","Palm Beach Island (North)",
+  "Palm Beach Shores","Saint Lucie County Beaches (North)",
+  "Saint Lucie Inlet State Park","Singer Island (Oasis Condos)",
+  "Singer Island (South)","South Palm Beach","South Reach Beach","Tequesta Beaches"
+]);
+
 // ── GMU zones ──────────────────────────────────────────────────────────────
 const GMU_COLORS = {
   NW: '#e74c3c', NE: '#e67e22', CE: '#f1c40f',
@@ -1256,7 +1271,7 @@ let _selectedBeachName = null;
 let beachSizeMetric   = 'mpw';
 let beachColorSpecies = 'cc';
 
-let mpwHeatLayer = null, densityHeatLayer = null, dotsLayer = null, trajLayer = null, startPtsLayer = null;
+let mpwHeatLayer = null, densityHeatLayer = null, dotsLayer = null, trajLayer = null, startPtsLayer = null, chTrajLayer = null;
 let anomalyLayers = { 'mc-det': null, 'mc-stoch': null, 'stoch-det': null };
 const trajSegments = new Map();
 let selectedTrajLine = null;
@@ -2102,7 +2117,7 @@ function refreshOpenPanels() {
   }
   if (gmuOpen && _currentGmu) openGmuPanel(_currentGmu, true);
 }
-function rebuildLayers() { rebuildHeatmaps(); rebuildDots(); rebuildTrajectories(); rebuildStartPoints(); updateStatsBar(getFiltered()); refreshOpenPanels(); }
+function rebuildLayers() { rebuildHeatmaps(); rebuildDots(); rebuildTrajectories(); rebuildChTrajectories(); rebuildStartPoints(); updateStatsBar(getFiltered()); refreshOpenPanels(); }
 
 // ── Starting point dots ────────────────────────────────────────────────────
 function rebuildStartPoints() {
@@ -2617,6 +2632,28 @@ function rebuildTrajectories() {
   });
   trajLayer.addTo(map);
 }
+
+// ── "CH Trajectories" overlay: all particles beached at the fixed CH_BEACHES set ──
+// Uncapped by design (unlike the click-driven Trajectories overlay) — renders
+// every matching particle, not a MAX_TRAJ_PARTICLES-limited sample.
+function rebuildChTrajectories() {
+  if (chTrajLayer) { map.removeLayer(chTrajLayer); chTrajLayer = null; }
+  const capNote = document.getElementById('chTrajCapNote');
+  if (!document.getElementById('togChTrajectories').checked) { capNote.style.display = 'none'; return; }
+  const pts = getFiltered().filter(p => CH_BEACHES.has(p.nesting_beach));
+  if (!pts.length) { capNote.style.display = 'none'; return; }
+  capNote.textContent = `Showing all ${pts.length.toLocaleString()} matching particles`;
+  capNote.style.display = '';
+  chTrajLayer = L.layerGroup();
+  pts.forEach(p => {
+    _buildSegments(p, 1.4, 0.5).forEach(s => chTrajLayer.addLayer(s));
+    const lls = trajLatLngs(p);
+    chTrajLayer.addLayer(L.circleMarker(lls[0], { radius: 3, weight: 1, color: '#fff', fillColor: '#2ecc71', fillOpacity: 0.9, renderer: trajDotsRenderer }));
+    chTrajLayer.addLayer(L.circleMarker(lls[lls.length - 1], { radius: 3, weight: 1, color: '#fff', fillColor: '#e74c3c', fillOpacity: 0.9, renderer: trajDotsRenderer }));
+  });
+  chTrajLayer.addTo(map);
+}
+
 function highlightTrajectory(pid) {
   const p = allParticles.find(x => x.pid === pid);
   if (!p) return;

@@ -31,6 +31,20 @@
     --series-tt:  #d55181;
     --series-dr:  #1fae1f;
     --series-other: #6b7686;
+    /* extended set for the full origin-country chart — beyond ~8 categorical
+       slots exact CVD-pairwise separation can't be guaranteed (see dataviz
+       skill); legend + tooltip + table carry identity for these */
+    --series-violet: #9075e0;
+    --series-red:    #e0605a;
+    --series-teal2:  #4fb8c4;
+    --series-lime:   #9ed850;
+    --series-pink2:  #e0549e;
+    --series-amber:  #c98a4a;
+    --series-indigo: #6a6fe0;
+    --series-olive:  #a8a83c;
+    --series-slate:  #7a94b8;
+    --series-rose:   #d47a94;
+    --series-cyan:   #3ec9c9;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; }
@@ -194,6 +208,46 @@
     <table class="data-table" id="table2"></table>
     <div class="card-loading" id="loading2"><div class="spinner"></div><div class="msg" id="loadingMsg2"></div></div>
   </div>
+
+  <!-- Chart 3 -->
+  <div class="card">
+    <div class="card-head">
+      <h2 class="card-title">Proportion of contribution by state, per beach — United States only</h2>
+      <div class="card-controls">
+        <span class="filter-label">Metric</span>
+        <div class="segmented" id="metricSegUS">
+          <button data-metric="mpw" class="active">MPW (tons)</button>
+          <button data-metric="count">Particle count</button>
+        </div>
+        <button class="table-toggle" id="c3TableToggle">View as table</button>
+        <button class="table-toggle" id="c3DownloadImg">Download image</button>
+      </div>
+    </div>
+    <p class="card-note">Same 24 beaches, restricted to particles whose origin resolved inside the United States, split by state.</p>
+    <div class="chart-wrap" id="c3ChartWrap">
+      <svg class="chart" id="chart3"></svg>
+      <div class="legend" id="legend3"></div>
+    </div>
+    <table class="data-table" id="table3"></table>
+    <div class="card-loading" id="loading3"><div class="spinner"></div><div class="msg" id="loadingMsg3"></div></div>
+  </div>
+
+  <!-- Chart 4 -->
+  <div class="card">
+    <div class="card-head">
+      <h2 class="card-title">Particle frequency by state, summed across all 24 beaches — United States only</h2>
+      <div class="card-controls">
+        <button class="table-toggle" id="c4TableToggle">View as table</button>
+        <button class="table-toggle" id="c4DownloadImg">Download image</button>
+      </div>
+    </div>
+    <p class="card-note">Total particle count reaching this beach set from a US origin, grouped by state.</p>
+    <div class="chart-wrap" id="c4ChartWrap">
+      <svg class="chart" id="chart4"></svg>
+    </div>
+    <table class="data-table" id="table4"></table>
+    <div class="card-loading" id="loading4"><div class="spinner"></div><div class="msg" id="loadingMsg4"></div></div>
+  </div>
 </div>
 
 <div class="tooltip" id="tooltip"></div>
@@ -346,22 +400,59 @@ const TARGET_BEACHES = [
 ];
 const targetSet = new Set(TARGET_BEACHES);
 
-const CATS = [
+// Every origin bucket observed for these 24 beaches, fixed order by combined
+// magnitude across all 3 models — no folding into "Other" (chart1 shows every
+// origin as its own segment, matching chart2's exhaustive per-origin bars).
+// "Global Particles" is nearestStartRegion()'s own fallback label for points
+// whose nearest match is farther than REGION_FALLBACK_MAX_DEG — a real bucket,
+// not a country, included here alongside the rest.
+// Ground-truthed directly against the particle data (bypassing any HTTP/browser
+// cache): exactly these 16 countries + United States + Global Particles,
+// nothing else — sum ties out to the total matched-particle count.
+const CATS_ALL = [
   { key: "United States", label: "United States", cssVar: "--series-us" },
   { key: "Haiti", label: "Haiti", cssVar: "--series-ht" },
   { key: "Jamaica", label: "Jamaica", cssVar: "--series-jm" },
-  { key: "Venezuela", label: "Venezuela", cssVar: "--series-ve" },
   { key: "Trinidad and Tobago", label: "Trinidad & Tobago", cssVar: "--series-tt" },
+  { key: "Venezuela", label: "Venezuela", cssVar: "--series-ve" },
+  { key: "Global Particles", label: "Global (unattributed)", cssVar: "--series-violet" },
   { key: "Dominican Rep.", label: "Dominican Rep.", cssVar: "--series-dr" },
+  { key: "Colombia", label: "Colombia", cssVar: "--series-red" },
+  { key: "Mexico", label: "Mexico", cssVar: "--series-teal2" },
+  { key: "Bahamas", label: "Bahamas", cssVar: "--series-lime" },
+  { key: "Suriname", label: "Suriname", cssVar: "--series-pink2" },
+  { key: "Puerto Rico", label: "Puerto Rico", cssVar: "--series-amber" },
+  { key: "Guyana", label: "Guyana", cssVar: "--series-indigo" },
+  { key: "Cuba", label: "Cuba", cssVar: "--series-olive" },
+  { key: "Honduras", label: "Honduras", cssVar: "--series-slate" },
+  { key: "Panama", label: "Panama", cssVar: "--series-rose" },
+  { key: "French West Indies", label: "French West Indies", cssVar: "--series-cyan" },
   { key: "Other", label: "Other", cssVar: "--series-other" }
 ];
-const TOP_KEYS = CATS.slice(0, 6).map(c => c.key);
+const TOP_KEYS_ALL = CATS_ALL.slice(0, 17).map(c => c.key);
+
+// US-only breakdown: the actual state a particle snapped to (not the
+// collapsed "United States" bucket). Checked against real data for these 24
+// beaches — Florida is ~99% of US-origin particles; Georgia/Alabama/
+// Mississippi/Louisiana and the unattributed remainder are all <1% each.
+const CATS_US = [
+  { key: "Florida", label: "Florida", cssVar: "--series-us" },
+  { key: "Georgia", label: "Georgia", cssVar: "--series-ht" },
+  { key: "Alabama", label: "Alabama", cssVar: "--series-jm" },
+  { key: "Mississippi", label: "Mississippi", cssVar: "--series-ve" },
+  { key: "Louisiana", label: "Louisiana", cssVar: "--series-tt" },
+  { key: "United States (unspecified)", label: "Unspecified (offshore)", cssVar: "--series-dr" },
+  { key: "Other", label: "Other state", cssVar: "--series-other" }
+];
+const TOP_KEYS_US = CATS_US.slice(0, 6).map(c => c.key);
 
 // beach -> country -> {count, mpw}, plus aggregate totals, for one model's particles
 function computeModelData(particles) {
   const beachCountry = new Map();
-  TARGET_BEACHES.forEach(b => beachCountry.set(b, new Map()));
+  const beachState = new Map();
+  TARGET_BEACHES.forEach(b => { beachCountry.set(b, new Map()); beachState.set(b, new Map()); });
   const totalsCount = {}, totalsMpw = {};
+  const usTotalsCount = {}, usTotalsMpw = {};
 
   for (const p of particles) {
     const beach = nearestNestingBeach(p.lat, p.lon);
@@ -375,18 +466,33 @@ function computeModelData(particles) {
     e.mpw += (p.mpw || 0);
     totalsCount[country] = (totalsCount[country] || 0) + 1;
     totalsMpw[country] = (totalsMpw[country] || 0) + (p.mpw || 0);
+
+    if (country === "United States") {
+      const stateName = US_NAMES.has(region) ? "United States (unspecified)" : region;
+      const sm = beachState.get(beach);
+      if (!sm.has(stateName)) sm.set(stateName, { count: 0, mpw: 0 });
+      const se = sm.get(stateName);
+      se.count++;
+      se.mpw += (p.mpw || 0);
+      usTotalsCount[stateName] = (usTotalsCount[stateName] || 0) + 1;
+      usTotalsMpw[stateName] = (usTotalsMpw[stateName] || 0) + (p.mpw || 0);
+    }
   }
 
-  const perBeach = {};
+  const perBeach = {}, perBeachUS = {};
   beachCountry.forEach((cm, beach) => {
     perBeach[beach] = {};
     cm.forEach((v, country) => { perBeach[beach][country] = v; });
   });
-  return { perBeach, totalsCount, totalsMpw, particleCount: particles.length };
+  beachState.forEach((sm, beach) => {
+    perBeachUS[beach] = {};
+    sm.forEach((v, stateName) => { perBeachUS[beach][stateName] = v; });
+  });
+  return { perBeach, totalsCount, totalsMpw, perBeachUS, usTotalsCount, usTotalsMpw, particleCount: particles.length };
 }
 
 // ---------- chart state & rendering ----------
-const state = { model: "mc", metric: "mpw" };
+const state = { model: "mc", metric: "mpw", metricUS: "mpw" };
 const computedCache = {}; // model -> computed data
 
 let indicesReady = null;
@@ -471,13 +577,13 @@ function el(tag, attrs){
 function fmt(n){ return Math.round(n).toLocaleString("en-US"); }
 function fmtTons(n){ return n.toFixed(1) + " t"; }
 
-function bucketBeach(rawCountryMap, metric){
-  const out = {}; CATS.forEach(c => out[c.key] = 0);
+function bucketBeach(rawMap, metric, cats, topKeys){
+  const out = {}; cats.forEach(c => out[c.key] = 0);
   let total = 0;
-  Object.keys(rawCountryMap || {}).forEach(country => {
-    const v = rawCountryMap[country][metric];
+  Object.keys(rawMap || {}).forEach(name => {
+    const v = rawMap[name][metric];
     total += v;
-    const bucket = TOP_KEYS.indexOf(country) >= 0 ? country : "Other";
+    const bucket = topKeys.indexOf(name) >= 0 ? name : "Other";
     out[bucket] += v;
   });
   return { values: out, total };
@@ -498,10 +604,8 @@ function renderLegend(container, cats){
   });
 }
 
-function renderChart1(data){
-  const metric = state.metric;
-  const perBeach = data.perBeach;
-  const svg = document.getElementById("chart1");
+function renderStackedChart(svgId, tableId, legendId, perBeachData, cats, topKeys, metric){
+  const svg = document.getElementById(svgId);
   svg.innerHTML = "";
 
   const n = TARGET_BEACHES.length;
@@ -521,17 +625,17 @@ function renderChart1(data){
 
   TARGET_BEACHES.forEach((beach, i) => {
     const bx = marginL + i*bandW + (bandW-barW)/2;
-    const raw = perBeach[beach] || {};
-    const b = bucketBeach(raw, metric);
+    const raw = perBeachData[beach] || {};
+    const b = bucketBeach(raw, metric, cats, topKeys);
     const total = b.total;
     let y = marginT + plotH;
-    const segCount = CATS.filter(c => b.values[c.key] > 0).length;
+    const segCount = cats.filter(c => b.values[c.key] > 0).length;
     let segIdx = 0;
 
     if (total <= 0) {
       svg.appendChild(el("rect", { x: bx, y: marginT+plotH-2, width: barW, height: 2, fill: "var(--text-muted)", opacity: 0.5 }));
     } else {
-      CATS.forEach(c => {
+      cats.forEach(c => {
         const v = b.values[c.key];
         if (v <= 0) return;
         const pct = v/total*100;
@@ -579,19 +683,17 @@ function renderChart1(data){
     svg.appendChild(lbl);
   });
 
-  renderLegend(document.getElementById("legend1"), CATS);
-  renderTable1(data);
+  renderLegend(document.getElementById(legendId), cats);
+  renderStackedTable(tableId, perBeachData, cats, topKeys, metric);
 }
 
-function renderTable1(data){
-  const metric = state.metric;
-  const perBeach = data.perBeach;
-  const table = document.getElementById("table1");
-  const head = "<tr><th>Beach</th>" + CATS.map(c => "<th>"+c.label+"</th>").join("") + "<th>Total</th></tr>";
+function renderStackedTable(tableId, perBeachData, cats, topKeys, metric){
+  const table = document.getElementById(tableId);
+  const head = "<tr><th>Beach</th>" + cats.map(c => "<th>"+c.label+"</th>").join("") + "<th>Total</th></tr>";
   const rows = TARGET_BEACHES.map(beach => {
-    const raw = perBeach[beach] || {};
-    const b = bucketBeach(raw, metric);
-    const cells = CATS.map(c => {
+    const raw = perBeachData[beach] || {};
+    const b = bucketBeach(raw, metric, cats, topKeys);
+    const cells = cats.map(c => {
       const v = b.values[c.key];
       if (b.total <= 0) return "<td>&mdash;</td>";
       const pct = (v/b.total*100);
@@ -603,9 +705,8 @@ function renderTable1(data){
   table.innerHTML = head + rows;
 }
 
-function renderChart2(data){
-  const totalsCount = data.totalsCount;
-  const svg = document.getElementById("chart2");
+function renderBarChart(svgId, tableId, totalsCount, totalsMpw, barColorVar){
+  const svg = document.getElementById(svgId);
   svg.innerHTML = "";
 
   const entries = Object.keys(totalsCount)
@@ -645,7 +746,7 @@ function renderChart2(data){
         " L" + (bx+barW) + "," + (marginT+plotH) +
         " L" + bx + "," + (marginT+plotH) + " Z"
       : "M" + bx + "," + y + " L" + (bx+barW) + "," + y + " L" + (bx+barW) + "," + (marginT+plotH) + " L" + bx + "," + (marginT+plotH) + " Z";
-    const bar = el("path", { d: pathD, fill: "var(--series-us)", class: "bar-seg" });
+    const bar = el("path", { d: pathD, fill: "var(" + barColorVar + ")", class: "bar-seg" });
     bar.addEventListener("pointerenter", evt => showTooltip(evt.clientX, evt.clientY, e.key, [["Particles", fmt(e.value)]]));
     bar.addEventListener("pointermove", evt => {
       tooltip.style.left = (evt.clientX+14) + "px";
@@ -667,12 +768,11 @@ function renderChart2(data){
     svg.appendChild(lbl);
   });
 
-  renderTable2(data, entries);
+  renderBarTable(tableId, totalsMpw, entries);
 }
 
-function renderTable2(data, entries){
-  const totalsMpw = data.totalsMpw;
-  const table = document.getElementById("table2");
+function renderBarTable(tableId, totalsMpw, entries){
+  const table = document.getElementById(tableId);
   const head = "<tr><th>Origin</th><th>Particles</th><th>MPW (tons)</th></tr>";
   const rows = entries.map(e =>
     "<tr><td>" + e.key + "</td><td>" + fmt(e.value) + "</td><td>" + (totalsMpw[e.key]||0).toFixed(1) + "</td></tr>"
@@ -681,7 +781,7 @@ function renderTable2(data, entries){
 }
 
 function setLoading(show, msg, isError){
-  ["1","2"].forEach(n => {
+  ["1","2","3","4"].forEach(n => {
     document.getElementById("loading"+n).classList.toggle("show", show);
     const m = document.getElementById("loadingMsg"+n);
     m.textContent = msg || "";
@@ -703,8 +803,10 @@ async function renderAll(){
     setLoading(false);
     document.getElementById("modelNote").textContent =
       data.particleCount.toLocaleString("en-US") + " particles in full run · model: " + model;
-    renderChart1(data);
-    renderChart2(data);
+    renderStackedChart("chart1", "table1", "legend1", data.perBeach, CATS_ALL, TOP_KEYS_ALL, state.metric);
+    renderBarChart("chart2", "table2", data.totalsCount, data.totalsMpw, "--series-us");
+    renderStackedChart("chart3", "table3", "legend3", data.perBeachUS, CATS_US, TOP_KEYS_US, state.metricUS);
+    renderBarChart("chart4", "table4", data.usTotalsCount, data.usTotalsMpw, "--series-us");
   } catch (err) {
     setLoading(true, "Failed to load " + model.toUpperCase() + " data: " + err.message, true);
     console.error(err);
@@ -725,7 +827,16 @@ document.getElementById("metricSeg").addEventListener("click", evt => {
   state.metric = btn.getAttribute("data-metric");
   document.querySelectorAll("#metricSeg button").forEach(b => b.classList.toggle("active", b === btn));
   const cached = computedCache[state.model];
-  if (cached) renderChart1(cached);
+  if (cached) renderStackedChart("chart1", "table1", "legend1", cached.perBeach, CATS_ALL, TOP_KEYS_ALL, state.metric);
+});
+
+document.getElementById("metricSegUS").addEventListener("click", evt => {
+  const btn = evt.target.closest("button[data-metric]");
+  if (!btn) return;
+  state.metricUS = btn.getAttribute("data-metric");
+  document.querySelectorAll("#metricSegUS button").forEach(b => b.classList.toggle("active", b === btn));
+  const cached = computedCache[state.model];
+  if (cached) renderStackedChart("chart3", "table3", "legend3", cached.perBeachUS, CATS_US, TOP_KEYS_US, state.metricUS);
 });
 
 // Clone an SVG, baking every computed fill/stroke (including CSS var() and
@@ -751,10 +862,12 @@ function _resolvedSvgClone(svg){
   return clone;
 }
 
-const PANEL_BG = "#0f1923", INK_PRIMARY = "#e8edf2", INK_SECONDARY = "#7a8fa3";
-
 async function downloadChartImage(svgId, opts){
   const svg = document.getElementById(svgId);
+  const rootStyle = getComputedStyle(document.documentElement);
+  const PANEL_BG = rootStyle.getPropertyValue("--bg-panel").trim();
+  const INK_PRIMARY = rootStyle.getPropertyValue("--text-primary").trim();
+  const INK_SECONDARY = rootStyle.getPropertyValue("--text-secondary").trim();
   const [vbX, vbY, vbW, vbH] = svg.getAttribute("viewBox").split(" ").map(Number);
   const scale = 2;
   const pad = 24 * scale;
@@ -826,13 +939,27 @@ document.getElementById("c1DownloadImg").addEventListener("click", () => {
   downloadChartImage("chart1", {
     title: "Proportion of contribution by origin, per beach — " + metricLabel + ", " + state.model.toUpperCase(),
     filename: "origin_proportion_" + state.model + "_" + state.metric + ".png",
-    legendCats: CATS
+    legendCats: CATS_ALL
   });
 });
 document.getElementById("c2DownloadImg").addEventListener("click", () => {
   downloadChartImage("chart2", {
     title: "Particle frequency by origin, all 24 beaches — " + state.model.toUpperCase(),
     filename: "origin_frequency_" + state.model + ".png"
+  });
+});
+document.getElementById("c3DownloadImg").addEventListener("click", () => {
+  const metricLabel = state.metricUS === "mpw" ? "MPW tons" : "particle count";
+  downloadChartImage("chart3", {
+    title: "Proportion of contribution by state, per beach — United States only, " + metricLabel + ", " + state.model.toUpperCase(),
+    filename: "origin_proportion_us_states_" + state.model + "_" + state.metricUS + ".png",
+    legendCats: CATS_US
+  });
+});
+document.getElementById("c4DownloadImg").addEventListener("click", () => {
+  downloadChartImage("chart4", {
+    title: "Particle frequency by state, all 24 beaches — United States only, " + state.model.toUpperCase(),
+    filename: "origin_frequency_us_states_" + state.model + ".png"
   });
 });
 
@@ -850,6 +977,8 @@ function wireTableToggle(btnId, wrapId, tableId){
 }
 wireTableToggle("c1TableToggle", "c1ChartWrap", "table1");
 wireTableToggle("c2TableToggle", "c2ChartWrap", "table2");
+wireTableToggle("c3TableToggle", "c3ChartWrap", "table3");
+wireTableToggle("c4TableToggle", "c4ChartWrap", "table4");
 
 renderAll();
 </script>
