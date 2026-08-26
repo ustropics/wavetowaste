@@ -1307,10 +1307,10 @@ const trajDotsRenderer = L.canvas({ padding: 0.5, pane: 'trajDotsPane' });
 
 // ── Basemap ────────────────────────────────────────────────────────────────
 const BASEMAPS = {
-  'carto-dark':          { label: '\u{1F311} CARTO Dark Matter',       url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',                attr: '&copy; OSM &copy; CARTO',  sub: 'abcd', maxZoom: 19 },
-  'carto-dark-nolabels': { label: '\u{1F311} CARTO Dark (No Labels)',  url: 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',           attr: '&copy; OSM &copy; CARTO',  sub: 'abcd', maxZoom: 19 },
-  'carto-light':         { label: '\u2600\uFE0F CARTO Positron',       url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',               attr: '&copy; OSM &copy; CARTO',  sub: 'abcd', maxZoom: 19 },
-  'carto-voyager':       { label: '\u{1F5FA}\uFE0F CARTO Voyager',     url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',      attr: '&copy; OSM &copy; CARTO',  sub: 'abcd', maxZoom: 19 },
+  'carto-dark':          { label: '\u{1F311} CARTO Dark Matter',       url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=cb1_25sw_1_78d368224036e6b1d4a54ba6',                attr: '&copy; OSM &copy; CARTO',  sub: 'abcd', maxZoom: 19 },
+  'carto-dark-nolabels': { label: '\u{1F311} CARTO Dark (No Labels)',  url: 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png?key=cb1_25sw_1_78d368224036e6b1d4a54ba6',           attr: '&copy; OSM &copy; CARTO',  sub: 'abcd', maxZoom: 19 },
+  'carto-light':         { label: '\u2600\uFE0F CARTO Positron',       url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=cb1_25sw_1_78d368224036e6b1d4a54ba6',               attr: '&copy; OSM &copy; CARTO',  sub: 'abcd', maxZoom: 19 },
+  'carto-voyager':       { label: '\u{1F5FA}\uFE0F CARTO Voyager',     url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=cb1_25sw_1_78d368224036e6b1d4a54ba6',      attr: '&copy; OSM &copy; CARTO',  sub: 'abcd', maxZoom: 19 },
   'esri-satellite':      { label: '\u{1F6F0}\uFE0F Esri Satellite',    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',     attr: 'Tiles &copy; Esri', sub: '', maxZoom: 19 },
   'esri-ocean':          { label: '\u{1F30A} Esri Ocean',              url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}', attr: 'Tiles &copy; Esri', sub: '', maxZoom: 13 },
   'osm-standard':        { label: '\u{1F30D} OpenStreetMap',           url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',                           attr: '&copy; OSM contributors', sub: 'abc', maxZoom: 19 },
