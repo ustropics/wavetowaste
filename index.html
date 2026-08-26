@@ -200,6 +200,9 @@
   /* ── Nesting filter pill in navbar ──────────────── */
   #nestingFilterPill.nz-filter-active { background: rgba(255,193,69,0.18) !important; border-color: rgba(255,193,69,0.5) !important; color: #ffc145 !important; }
 
+  /* Loggerhead beach popup */
+  .lh-popup-title { color: #c2410c !important; }
+
   /* ── Chart modal ─────────────────────────────────── */
   #chartModal { display: none; position: fixed; inset: 0; z-index: 3000; align-items: center; justify-content: center; }
   #chartModal.visible { display: flex; }
@@ -644,6 +647,10 @@
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Nesting Zones SHP
       </button>
+      <button class="dropdown-item" onclick="downloadLoggerheadShapefile(); closeExportDropdown()">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Loggerhead Beach SHP
+      </button>
       <button class="dropdown-item" onclick="downloadGeoJSON(); closeExportDropdown()">
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Filtered GeoJSON
@@ -757,6 +764,10 @@
         <button class="drawer-list-item" onclick="_drawerExport(downloadNestingShapefile)">
           <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Nesting Zones SHP
+        </button>
+        <button class="drawer-list-item" onclick="_drawerExport(downloadLoggerheadShapefile)">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Loggerhead Beach SHP
         </button>
         <button class="drawer-list-item" onclick="_drawerExport(downloadGeoJSON)">
           <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -969,6 +980,7 @@
         <label class="toggle-compact"><input type="checkbox" id="togChTrajectories" onchange="rebuildChTrajectories()"><span class="toggle-track-sm"></span><span class="toggle-compact-label">CH Trajectories</span></label>
         <span id="chTrajCapNote" style="display:none;font-size:10px;color:var(--text-secondary);grid-column:1/-1;margin-top:-4px;"></span>
         <label class="toggle-compact"><input type="checkbox" id="togNestingZones"><span class="toggle-track-sm"></span><span class="toggle-compact-label">Nesting Zones</span></label>
+        <label class="toggle-compact"><input type="checkbox" id="togLoggerheadZones"><span class="toggle-track-sm"></span><span class="toggle-compact-label">Loggerhead Beach</span></label>
         <label class="toggle-compact"><input type="checkbox" id="togStartPts" onchange="rebuildStartPoints()"><span class="toggle-track-sm"></span><span class="toggle-compact-label">Start Points</span></label>
         <label class="toggle-compact"><input type="checkbox" id="togGmuZones" checked><span class="toggle-track-sm"></span><span class="toggle-compact-label">GMU Zones</span></label>
         <label class="toggle-compact"><input type="checkbox" id="togBeachZones"><span class="toggle-track-sm"></span><span class="toggle-compact-label">Beach Zones</span></label>
@@ -1120,6 +1132,7 @@ let _gmuSortKey     = 'name';
 let _gmuSortDir     = 1;     // 1 = asc, -1 = desc
 let nestingLayer  = null;
 let nestingPolygons = [];
+let loggerheadLayer = null;
 let regionPolygons  = [];
 const US_NAMES = new Set(['United States', 'United States of America']);
 
@@ -1646,6 +1659,31 @@ function renderNestingZones() {
         rebuildTrajectories();
         renderNestingZones();
       });
+    }
+  }).addTo(map);
+}
+
+function renderLoggerheadZones() {
+  if (loggerheadLayer) { map.removeLayer(loggerheadLayer); loggerheadLayer = null; }
+  const toggle = document.getElementById("togLoggerheadZones");
+  if (!toggle || !toggle.checked) return;
+  if (!window._LOGGERHEAD_GEOJSON) {
+    _loadScript('florida_loggerhead_zones.js').then(renderLoggerheadZones)
+      .catch(e => alert('Could not load Loggerhead Beach zones: ' + e.message));
+    return;
+  }
+  loggerheadLayer = L.geoJSON(window._LOGGERHEAD_GEOJSON, {
+    style: { color: "#c2410c", weight: 2.5, opacity: 0.8 },
+    onEachFeature(feature, layer) {
+      const p = feature.properties;
+      layer.bindPopup(
+        '<div class="nz-popup"><div class="nz-popup-title lh-popup-title">\u{1F422} ' + (p.Beach||"Loggerhead Beach") + '</div>' +
+        '<strong>County:</strong> ' + (p.County||"—") + '<br>' +
+        '<strong>Loggerhead density:</strong> ' + (p.ccMeanDens||"—") + ' (' + (p.ccDensClas||"—") + ')<br>' +
+        '</div>'
+      );
+      layer.on("mouseover", () => layer.setStyle({ weight: 4, opacity: 1 }));
+      layer.on("mouseout",  () => layer.setStyle({ weight: 2.5, opacity: 0.8 }));
     }
   }).addTo(map);
 }
@@ -2874,6 +2912,22 @@ function _triggerNestingDownload() {
   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
+function downloadLoggerheadShapefile() {
+  if (window._LOGGERHEAD_SHP_B64) {
+    _triggerLoggerheadDownload();
+  } else {
+    _loadScript('florida_loggerhead_shp.js').then(_triggerLoggerheadDownload).catch(e => alert('Could not load Loggerhead Beach shapefile: ' + e.message));
+  }
+}
+function _triggerLoggerheadDownload() {
+  const b = atob(window._LOGGERHEAD_SHP_B64); const a8 = new Uint8Array(b.length);
+  for (let i = 0; i < b.length; i++) a8[i] = b.charCodeAt(i);
+  const blob = new Blob([a8], { type: "application/zip" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = "loggerhead_beach_zones.zip";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
 function downloadNestingCSV() {
   if (window._NESTING_CSV_B64) {
     _triggerNestingCsvDownload();
@@ -3098,6 +3152,7 @@ function _wireSliders() {
     rebuildTrajectories();
   });
   document.getElementById("togNestingZones").addEventListener("change", renderNestingZones);
+  document.getElementById("togLoggerheadZones").addEventListener("change", renderLoggerheadZones);
   document.getElementById("togGmuZones").addEventListener("change", renderGmuZones);
   document.getElementById("togBeachZones").addEventListener("change", renderBeachZones);
 }
@@ -3108,6 +3163,7 @@ function init() {
   rebuildFilterPills();
   rebuildLayers();
   renderNestingZones();
+  renderLoggerheadZones();
   renderGmuZones();
   renderBeachZones();
   if (allParticles.length > 0) {
