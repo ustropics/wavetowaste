@@ -3132,12 +3132,14 @@ function downloadOriginBeachCSV() {
 
   const stats = new Map(); // beach -> origin beach -> {count, mpw}
   const origins = new Set();
-  const startedHere = new Map(); // origin beach -> particles that started there (any landing spot)
+  const startedHere = new Map();        // origin beach -> started there, beached anywhere in Florida
+  const startedHereNesting = new Map(); // origin beach -> started there, beached on a nesting beach
   filtered.forEach(p => {
     if (p.start_region !== 'Florida') return;
     const origin = nearestOriginBeach(p.start_lat, p.start_lon);
     startedHere.set(origin, (startedHere.get(origin) || 0) + 1);
     const beach = p.nesting_beach; if (!beach) return;
+    startedHereNesting.set(origin, (startedHereNesting.get(origin) || 0) + 1);
     origins.add(origin);
     if (!stats.has(beach)) stats.set(beach, new Map());
     const bm = stats.get(beach);
@@ -3145,17 +3147,38 @@ function downloadOriginBeachCSV() {
     const e = bm.get(origin); e.count++; e.mpw += (p.mpw || 0);
   });
 
+  // Estimated total releases (beached anywhere, or still adrift). The data only
+  // holds releases that beached in Florida, so this is rebuilt from the seeding
+  // design: each release point (pid) is reseeded once per month, so
+  // releases = release points near the beach × selected year-months.
+  // Lower bound: release points whose particles never beached in Florida are
+  // absent from the data entirely.
+  const releasePoints = new Map(); // origin beach -> Set(pid)
+  allParticles.forEach(p => {
+    if (p.start_region !== 'Florida') return;
+    const origin = nearestOriginBeach(p.start_lat, p.start_lon);
+    if (!releasePoints.has(origin)) releasePoints.set(origin, new Set());
+    releasePoints.get(origin).add(p.pid);
+  });
+  const releaseMonths = activeYears.size * activeMonths.size;
+
   const originCols = [...origins].filter(o => o !== ORIGIN_BEACH_NONE).sort((a, b) => a.localeCompare(b));
   if (origins.has(ORIGIN_BEACH_NONE)) originCols.push(ORIGIN_BEACH_NONE);
 
   const quote = s => /[,\s"]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-  const header = ['beach', 'particles started here', 'Florida total particles', 'Florida total mpw_tons',
+  const header = ['beach',
+    'particles released here (est. incl. adrift)',
+    'particles started here beached in Florida',
+    'particles started here beached on nesting beaches',
+    'Florida total particles', 'Florida total mpw_tons',
     ...originCols.flatMap(o => [o + ' particles', o + ' mpw_tons'])].map(quote);
   const rows = beaches.map(beach => {
     const bm = stats.get(beach) || new Map();
     let tc = 0, tm = 0; bm.forEach(v => { tc += v.count; tm += v.mpw; });
     const vals = originCols.flatMap(o => { const e = bm.get(o) || { count: 0, mpw: 0 }; return [e.count, e.mpw.toFixed(4)]; });
-    return [quote(beach), startedHere.get(beach) || 0, tc, tm.toFixed(4), ...vals].join(',');
+    const released = (releasePoints.get(beach)?.size || 0) * releaseMonths;
+    return [quote(beach), released, startedHere.get(beach) || 0, startedHereNesting.get(beach) || 0,
+      tc, tm.toFixed(4), ...vals].join(',');
   });
 
   const blob = new Blob([header.join(',') + '\n' + rows.join('\n')], { type: 'text/csv' });
