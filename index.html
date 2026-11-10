@@ -667,27 +667,31 @@
     <div class="dropdown-menu" id="exportCsvMenu">
       <button class="dropdown-item" onclick="downloadCSV(); closeExportCsvDropdown()">
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Filtered CSV
+        Filtered
       </button>
       <button class="dropdown-item" onclick="downloadNestingCSV(); closeExportCsvDropdown()">
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Model Data CSV
+        Model Data
       </button>
       <button class="dropdown-item" onclick="downloadDataAllCSV(); closeExportCsvDropdown()">
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Master Data CSV
+        Master Data
       </button>
       <button class="dropdown-item" onclick="downloadBeachTotalsCSV(); closeExportCsvDropdown()">
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Beach Totals CSV
+        Beach Totals
       </button>
       <button class="dropdown-item" onclick="downloadOriginCSV(); closeExportCsvDropdown()">
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Particle Origin CSV
+        Particle Origin
       </button>
       <button class="dropdown-item" onclick="downloadOriginBeachCSV(); closeExportCsvDropdown()">
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Particle Origin Beach CSV
+        Particle Origin Beach
+      </button>
+      <button class="dropdown-item" onclick="downloadRpcOriginCSV(); closeExportCsvDropdown()">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        RPC Origin
       </button>
     </div>
   </div>
@@ -785,27 +789,31 @@
       <div class="drawer-export-list">
         <button class="drawer-list-item" onclick="_drawerExport(downloadCSV)">
           <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Filtered CSV
+          Filtered
         </button>
         <button class="drawer-list-item" onclick="_drawerExport(downloadNestingCSV)">
           <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Model Data CSV
+          Model Data
         </button>
         <button class="drawer-list-item" onclick="_drawerExport(downloadDataAllCSV)">
           <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Master Data CSV
+          Master Data
         </button>
         <button class="drawer-list-item" onclick="_drawerExport(downloadBeachTotalsCSV)">
           <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Beach Totals CSV
+          Beach Totals
         </button>
         <button class="drawer-list-item" onclick="_drawerExport(downloadOriginCSV)">
           <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Particle Origin CSV
+          Particle Origin
         </button>
         <button class="drawer-list-item" onclick="_drawerExport(downloadOriginBeachCSV)">
           <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Particle Origin Beach CSV
+          Particle Origin Beach
+        </button>
+        <button class="drawer-list-item" onclick="_drawerExport(downloadRpcOriginCSV)">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          RPC Origin
         </button>
       </div>
     </div>
@@ -3185,6 +3193,319 @@ function downloadOriginBeachCSV() {
   const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url;
   a.download = currentModel + '_particle_origin_beach' + _exportSuffix() + '.csv';
   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+// ── RPC Origin CSV ────────────────────────────────────────────────────────
+// Beach -> [RPC (Regional Planning Council), survey length km], from BeachRPClength.csv.
+const BEACH_RPC_LENGTH = {
+  "Alligator Point": ["Apalachee", 9.6],
+  "Amelia Island": ["Northeast", 18.6],
+  "Amelia Island State Park": ["Northeast", 1.6],
+  "Anastasia State Park": ["Northeast", 6.4],
+  "Anclote Key Preserve State Park": ["Tampa Bay", 7.3],
+  "Anna Maria Island": ["Tampa Bay", 9.0],
+  "Archie Carr National Wildlife Refuge (Brevard)": ["East Central", 21.0],
+  "Avalon State Park": ["Treasure Coast", 2.8],
+  "Bahia Honda State Park": ["South Florida", 4.7],
+  "Bald Point State Park": ["Apalachee", 4.8],
+  "Barefoot Beach Preserve": ["Southwest", 4.9],
+  "Beach Club Drive (North)": ["Northeast", 2.9],
+  "Beach Club Drive (South)": ["Northeast", 6.0],
+  "Big Hickory Island": ["Southwest", 1.8],
+  "Big Pine Key": ["South Florida", 3.0],
+  "Big Talbot Island State Park": ["Northeast", 1.6],
+  "Bimini Pass Beach": ["Tampa Bay", 1.02],
+  "Biscayne National Park": ["South Florida", 2.3],
+  "Boca Chica Key": ["South Florida", 0.3],
+  "Boca Raton Beaches": ["Treasure Coast", 8.0],
+  "Bonita Beach": ["Southwest", 3.2],
+  "Bunche Beach": ["Southwest", 1.4],
+  "Cabbage Key (North)": ["Tampa Bay", 2.3],
+  "Cabbage Key (South)": ["Tampa Bay", 2.9],
+  "Caladesi Island State Park": ["Tampa Bay", 3.8],
+  "Camp Helen State Park": ["Emerald Coast", 0.8],
+  "Canaveral National Seashore (Brevard County)": ["East Central", 20.1],
+  "Canaveral National Seashore (Volusia County)": ["East Central", 18.1],
+  "Cannon Island": ["Southwest", 0.84],
+  "Cape Canaveral Space Force Station": ["East Central", 21.0],
+  "Cape Florida State Park": ["South Florida", 2.0],
+  "Cape Romano": ["Southwest", 4.0],
+  "Cape Saint George Island": ["Apalachee", 14.5],
+  "Cape San Blas": ["Apalachee", 10.5],
+  "Cape San Blas (AFB)": ["Apalachee", 4.8],
+  "Captiva Island": ["Southwest", 8.0],
+  "Carrabelle": ["Apalachee", 8.0],
+  "Casa Marina (Key West)": ["South Florida", 0.3],
+  "Casey Key": ["Southwest", 11.8],
+  "Cayo Costa State Park (North)": ["Southwest", 6.8],
+  "Cayo Costa State Park (South)": ["Southwest", 2.61],
+  "Clam Pass Park": ["Southwest", 1.4],
+  "Clarence Higgs Beach (Key West)": ["South Florida", 0.17],
+  "Cocoa Beach": ["East Central", 7.2],
+  "Cocoa Beach (South)": ["East Central", 3.2],
+  "Coral Cove Park": ["Treasure Coast", 0.3],
+  "Deer Lake State Park": ["Emerald Coast", 0.9],
+  "Deerfield/Hillsboro Beaches": ["South Florida", 7.0],
+  "Delray Beach": ["Treasure Coast", 4.5],
+  "Dog Island": ["Apalachee", 12.1],
+  "Don Pedro Island": ["Southwest", 6.1],
+  "Don Pedro State Park": ["Southwest", 2.4],
+  "Dry Tortugas (Bush Key)": ["South Florida", 1.7],
+  "Dry Tortugas (East Key)": ["South Florida", 0.6],
+  "Dry Tortugas (Garden Key)": ["South Florida", 0.6],
+  "Dry Tortugas (Loggerhead Key)": ["South Florida", 3.2],
+  "Duval County Beaches (South)": ["Northeast", 12.0],
+  "ENP Cape Sable (North)": ["South Florida", 7.1],
+  "ENP Cape Sable (South)": ["South Florida", 10.5],
+  "Eglin Air Force Base (Okaloosa-East)": ["Emerald Coast", 6.4],
+  "Eglin Air Force Base (Okaloosa-West)": ["Emerald Coast", 16.1],
+  "Eglin Air Force Base (Santa Rosa County)": ["Emerald Coast", 4.8],
+  "Egmont Key": ["Tampa Bay", 4.8],
+  "Estero Island": ["Southwest", 11.3],
+  "Fat Deer Key": ["South Florida", 1.6],
+  "Fisher Island": ["South Florida", 0.9],
+  "Flagler Beach": ["Northeast", 9.6],
+  "Flagler County Beaches (North)": ["Northeast", 6.4],
+  "Flagler County Beaches (South)": ["Northeast", 9.7],
+  "Fort Clinch State Park": ["Northeast", 4.0],
+  "Fort DeSoto County Park": ["Tampa Bay", 9.6],
+  "Fort Lauderdale Beach": ["South Florida", 10.6],
+  "Fort Lauderdale Beach (POA-Inlet Beach)": ["South Florida", 0.12],
+  "Fort Lauderdale Beach (Port Everglades Inlet)": ["South Florida", 0.35],
+  "Fort Matanzas (North)": ["Northeast", 6.0],
+  "Fort Matanzas (South)": ["Northeast", 4.1],
+  "Fort Matanzas National Monument": ["Northeast", 1.6],
+  "Fort Pierce State Park": ["Treasure Coast", 0.6],
+  "Fort Zachary Taylor State Park": ["South Florida", 0.5],
+  "Gamble Rogers Memorial SRA": ["Northeast", 1.8],
+  "Gasparilla Island North (Charlotte County)": ["Southwest", 3.0],
+  "Gasparilla Island South (Lee County)": ["Southwest", 9.7],
+  "Gasparilla Island State Park": ["Southwest", 1.6],
+  "Golden Beach": ["South Florida", 1.9],
+  "Grayton Beach State Park": ["Emerald Coast", 3.8],
+  "Guana River (South)": ["Northeast", 5.6],
+  "Guana Tolomato Matanzas NERR": ["Northeast", 6.8],
+  "Gulf Islands National Seashore (Fort Pickens)": ["Emerald Coast", 12.0],
+  "Gulf Islands National Seashore (Perdido Key)": ["Emerald Coast", 14.6],
+  "Gulf Islands National Seashore (Santa Rosa)": ["Emerald Coast", 11.3],
+  "Gulfstream": ["Treasure Coast", 3.1],
+  "Gulfstream Park": ["Treasure Coast", 0.3],
+  "Hanna Park": ["Northeast", 2.4],
+  "Henderson Beach State Park": ["Emerald Coast", 2.2],
+  "Highland Beach": ["Treasure Coast", 4.8],
+  "Hobe Sound National Wildlife Refuge": ["Treasure Coast", 5.3],
+  "Hollywood/Hallandale Beaches": ["South Florida", 9.4],
+  "Honeymoon Island State Park": ["Tampa Bay", 6.4],
+  "Huguenot Park": ["Northeast", 4.0],
+  "Hutchinson Island (Martin County)": ["Treasure Coast", 12.0],
+  "Hutchinson Island (North)": ["Treasure Coast", 19.0],
+  "Hutchinson Island (South)": ["Treasure Coast", 5.5],
+  "Indian River County Beaches (North)": ["Treasure Coast", 4.3],
+  "Indian River County Beaches (South)": ["Treasure Coast", 7.5],
+  "Indian River Shores (North)": ["Treasure Coast", 0.8],
+  "Indian River Shores (South)": ["Treasure Coast", 4.6],
+  "J.D. MacArthur Beach State Park": ["Treasure Coast", 2.9],
+  "Jetty Park": ["East Central", 4.8],
+  "Juno Beach": ["Treasure Coast", 9.7],
+  "Jupiter Beach (North)": ["Treasure Coast", 2.5],
+  "Jupiter Inlet Colony": ["Treasure Coast", 1.4],
+  "Jupiter Island": ["Treasure Coast", 13.7],
+  "Keewaydin Island (North)": ["Southwest", 5.0],
+  "Keewaydin Island (South)": ["Southwest", 6.9],
+  "Key Biscayne": ["South Florida", 4.0],
+  "Key Biscayne (Crandon Park Marina)": ["South Florida", 0.03],
+  "Key Biscayne (Northern Point)": ["South Florida", 0.13],
+  "Key Colony Beach": ["South Florida", 1.5],
+  "Lake Worth Municipal Beach": ["Treasure Coast", 0.4],
+  "Lantana": ["Treasure Coast", 0.2],
+  "Lido Key": ["Southwest", 5.3],
+  "Little Crawl Key": ["South Florida", 0.3],
+  "Little Talbot Island State Park": ["Northeast", 8.7],
+  "Long Key (West End)": ["South Florida", 1.6],
+  "Long Key State Park": ["South Florida", 2.9],
+  "Long Key State Park (Long Key Point)": ["South Florida", 1.7],
+  "Longboat Key (North)": ["Tampa Bay", 10.0],
+  "Longboat Key (South)": ["Southwest", 9.4],
+  "Lovers Key State Park": ["Southwest", 4.0],
+  "Lower Matecumbe (Ocean)": ["South Florida", 2.1],
+  "Manalapan (North)": ["Treasure Coast", 3.8],
+  "Manasota Key (Charlotte County)": ["Southwest", 4.8],
+  "Manasota Key (Sarasota County)": ["Southwest", 12.9],
+  "Marco Island": ["Southwest", 11.4],
+  "Marineland Beach": ["Northeast", 2.9],
+  "Mayport Naval Station": ["Northeast", 1.8],
+  "Merritt Island National Wildlife Refuge": ["East Central", 9.8],
+  "Mexico Beach": ["Emerald Coast", 6.8],
+  "Miami Beaches": ["South Florida", 21.6],
+  "Mid Reach Beach": ["East Central", 12.0],
+  "Miramar Beach": ["Emerald Coast", 7.9],
+  "Mizell-Johnson State Park": ["South Florida", 3.9],
+  "Naples Beach": ["Southwest", 9.0],
+  "Nature Preserve Beach (Key West)": ["South Florida", 0.18],
+  "Navarre Beach": ["Emerald Coast", 6.4],
+  "New Smyrna Beach": ["East Central", 17.5],
+  "North Captiva Island (North)": ["Southwest", 2.3],
+  "North Captiva Island (South)": ["Southwest", 0.8],
+  "North Captiva Island State Park": ["Southwest", 5.6],
+  "North Peninsula State Park": ["East Central", 4.0],
+  "Ocean Reef Park": ["Treasure Coast", 0.2],
+  "Ocean Ridge (South)": ["Treasure Coast", 1.0],
+  "Okaloosa County Beaches (Destin)": ["Emerald Coast", 8.5],
+  "Okaloosa County Island Beaches": ["Emerald Coast", 4.8],
+  "Old Boca Chica Road Beach (NAS)": ["South Florida", 0.17],
+  "Old Ponte Vedra": ["Northeast", 1.7],
+  "Outback Key": ["Tampa Bay", 4.4],
+  "Palm Beach County Beaches (Middle)": ["Treasure Coast", 5.1],
+  "Palm Beach Island (North)": ["Treasure Coast", 17.0],
+  "Palm Beach Shores": ["Treasure Coast", 0.8],
+  "Panama City Beach": ["Emerald Coast", 28.2],
+  "Parkshore Beach": ["Southwest", 3.8],
+  "Patio Beach": ["South Florida", 0.3],
+  "Patrick Space Force Base": ["East Central", 7.0],
+  "Pensacola Beach": ["Emerald Coast", 13.5],
+  "Perdido Key": ["Emerald Coast", 6.8],
+  "Perdido Key State Park": ["Emerald Coast", 2.6],
+  "Phipps Preserve Beach": ["Apalachee", 2.4],
+  "Pinellas County Beaches (Mid)": ["Tampa Bay", 13.63],
+  "Pinellas County Beaches (North)": ["Tampa Bay", 20.0],
+  "Pompano/Lauderdale-by-the-Sea": ["South Florida", 7.7],
+  "Ponte Vedra (North)": ["Northeast", 3.8],
+  "Ponte Vedra (South)": ["Northeast", 7.8],
+  "Reach Beach (Key West)": ["South Florida", 0.9],
+  "Residental Beach": ["South Florida", 0.3],
+  "Saint Andrews State Park": ["Emerald Coast", 6.8],
+  "Saint Augustine Beaches": ["Northeast", 11.3],
+  "Saint George Island": ["Apalachee", 16.0],
+  "Saint George Island State Park": ["Apalachee", 14.5],
+  "Saint Joe Beach": ["Apalachee", 6.4],
+  "Saint Joseph Peninsula": ["Apalachee", 11.0],
+  "Saint Joseph Peninsula State Park": ["Apalachee", 14.3],
+  "Saint Lucie County Beaches (North)": ["Treasure Coast", 6.6],
+  "Saint Lucie Inlet State Park": ["Treasure Coast", 4.3],
+  "Saint Pete Beach": ["Tampa Bay", 6.4],
+  "Saint Vincent National Wildlife Refuge": ["Apalachee", 16.1],
+  "Sanibel Island (East)": ["Southwest", 9.6],
+  "Sanibel Island (West)": ["Southwest", 12.9],
+  "Sea Oat Island": ["Southwest", 0.9],
+  "Sebastian Inlet State Park (Brevard County)": ["East Central", 1.6],
+  "Sebastian Inlet State Park (Indian River County)": ["Treasure Coast", 3.2],
+  "Siesta Key (North)": ["Southwest", 5.0],
+  "Siesta Key (South)": ["Southwest", 4.1],
+  "Singer Island (North)": ["Treasure Coast", 1.3],
+  "Singer Island (Oasis Condos)": ["Treasure Coast", 0.02],
+  "Singer Island (South)": ["Treasure Coast", 1.2],
+  "Smathers Beach (Key West)": ["South Florida", 1.6],
+  "Sombrero Beach": ["South Florida", 0.3],
+  "South Palm Beach": ["Treasure Coast", 3.3],
+  "South Reach Beach": ["East Central", 7.5],
+  "Stump Pass State Park": ["Southwest", 2.2],
+  "Sugarloaf Key": ["South Florida", 1.4],
+  "Sunset Key (Tank Island)": ["South Florida", 1.1],
+  "Ten Thousand Islands National Wildlife Refuge": ["Southwest", 4.9],
+  "Tequesta Beaches": ["Treasure Coast", 1.4],
+  "Topsail Hill Preserve State Park": ["Emerald Coast", 5.1],
+  "Tyndall Air Force Base": ["Emerald Coast", 28.5],
+  "UWF Property Beach": ["Emerald Coast", 2.0],
+  "Vanderbilt Beach": ["Southwest", 5.6],
+  "Venice Beaches": ["Southwest", 7.4],
+  "Vero Beach": ["Treasure Coast", 6.3],
+  "Vilano Beach": ["Northeast", 4.8],
+  "Virginia Key": ["South Florida", 3.8],
+  "Virginia Key (South)": ["South Florida", 0.12],
+  "Volusia County Beaches (North)": ["East Central", 20.9],
+  "Volusia County Beaches (South)": ["East Central", 19.3],
+  "Wabasso Beach": ["Treasure Coast", 8.0],
+  "Wabasso Beach (South)": ["Treasure Coast", 1.3],
+  "Walton County Beaches (East)": ["Emerald Coast", 15.6],
+  "Walton County Beaches (Middle)": ["Emerald Coast", 7.7],
+  "Walton County Beaches (West)": ["Emerald Coast", 7.7],
+  "Washington Oaks Gardens State Park": ["Northeast", 1.1],
+  "Wiggins Pass State Park": ["Southwest", 2.4]
+};
+// Shapefile beach names that differ from (or are missing in) BeachRPClength.csv.
+// Missing beaches get an RPC from their county but no survey length.
+const BEACH_RPC_ALIAS = { 'Manasota Key Beach (Sarasota County)': 'Manasota Key (Sarasota County)' };
+const BEACH_RPC_FALLBACK = {
+  'Dry Tortugas (Middle Key)': 'South Florida',                              // Monroe
+  'George Crady Bridge Fishing Pier SP (Sawpit Island)': 'Northeast',        // Duval
+  'Siesta Key (Channel Side)': 'Southwest'                                   // Sarasota
+};
+// Clockwise around the coast, panhandle to Tampa Bay.
+const RPC_ORDER = ['Emerald Coast', 'Apalachee', 'Northeast', 'East Central',
+                   'Treasure Coast', 'South Florida', 'Southwest', 'Tampa Bay'];
+
+function beachRpcInfo(name) {
+  if (!name) return null;
+  const key = name.replace(/\s+/g, ' ').trim();
+  const rec = BEACH_RPC_LENGTH[key] || BEACH_RPC_LENGTH[BEACH_RPC_ALIAS[key]];
+  if (rec) return { rpc: rec[0], km: rec[1] };
+  if (BEACH_RPC_FALLBACK[key]) return { rpc: BEACH_RPC_FALLBACK[key], km: null };
+  return null;
+}
+
+// Beach × origin-RPC matrix, normalized: for particles that started in Florida,
+// the RPC of the nearest nesting beach to their start point, per beach they
+// washed up on, divided by that beach's survey length (km) and the number of
+// selected years.
+function downloadRpcOriginCSV() {
+  const filtered = getFiltered();
+  const nYears = activeYears.size || 1;
+
+  const seen = new Set();
+  const beaches = [];
+  (window._NESTING_GEOJSON ? window._NESTING_GEOJSON.features : []).forEach(f => {
+    const name = f.properties.Beach;
+    if (!seen.has(name)) { seen.add(name); beaches.push(name); }
+  });
+  beaches.sort((a, b) => a.localeCompare(b));
+
+  const stats = new Map(); // beach -> rpc -> {count, mpw}
+  filtered.forEach(p => {
+    if (p.start_region !== 'Florida') return;
+    const beach = p.nesting_beach; if (!beach) return;
+    const origin = beachRpcInfo(nearestOriginBeach(p.start_lat, p.start_lon));
+    if (!origin) return; // started >~55 km from any nesting beach: no RPC
+    if (!stats.has(beach)) stats.set(beach, new Map());
+    const bm = stats.get(beach);
+    if (!bm.has(origin.rpc)) bm.set(origin.rpc, { count: 0, mpw: 0 });
+    const e = bm.get(origin.rpc); e.count++; e.mpw += (p.mpw || 0);
+  });
+
+  const header = ['beach', 'beach RPC', 'survey length km',
+    ...RPC_ORDER.flatMap(r => ['from ' + r + ' particles/km/yr', 'from ' + r + ' mpw_tons/km/yr'])];
+  // Rounded sheet: whole particles/km/yr, any non-zero value below 1 shown as 1.
+  const roundPpk = v => v > 0 && v < 1 ? 1 : Math.round(v);
+  const buildRows = rounded => beaches.map(beach => {
+    const info = beachRpcInfo(beach);
+    const km = info && info.km;
+    const bm = stats.get(beach) || new Map();
+    const vals = RPC_ORDER.flatMap(r => {
+      if (!km) return ['', ''];
+      const e = bm.get(r) || { count: 0, mpw: 0 };
+      const ppk = e.count / km / nYears, mpk = e.mpw / km / nYears;
+      return rounded ? [roundPpk(ppk), +mpk.toFixed(6)] : [ppk, mpk];
+    });
+    return [beach, info ? info.rpc : '', km != null ? km : '', ...vals];
+  });
+
+  RPC_ORIGIN_XLSX_LOAD().then(() => {
+    const wb = XLSX.utils.book_new();
+    const addSheet = (rows, name) => {
+      const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+      ws['!cols'] = header.map((h, i) => ({ wch: i === 0 ? 40 : Math.max(12, Math.min(h.length, 34)) }));
+      ws['!freeze'] = { xSplit: 1, ySplit: 1 };
+      XLSX.utils.book_append_sheet(wb, ws, name);
+    };
+    addSheet(buildRows(true), 'Rounded');
+    addSheet(buildRows(false), 'Raw');
+    XLSX.writeFile(wb, currentModel + '_rpc_origin' + _exportSuffix() + '.xlsx');
+  }).catch(e => alert('Could not load spreadsheet library: ' + e.message));
+}
+
+// SheetJS, loaded only when the RPC Origin export is used.
+const RPC_ORIGIN_XLSX_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+function RPC_ORIGIN_XLSX_LOAD() {
+  return window.XLSX ? Promise.resolve() : _loadScript(RPC_ORIGIN_XLSX_SRC);
 }
 
 // ── Shapefile builder (client-side) ───────────────────────────────────────
