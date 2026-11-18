@@ -693,6 +693,10 @@
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         RPC Origin
       </button>
+      <button class="dropdown-item" onclick="downloadRpcTotalsCSV(); closeExportCsvDropdown()">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        RPC Totals
+      </button>
     </div>
   </div>
 
@@ -814,6 +818,10 @@
         <button class="drawer-list-item" onclick="_drawerExport(downloadRpcOriginCSV)">
           <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           RPC Origin
+        </button>
+        <button class="drawer-list-item" onclick="_drawerExport(downloadRpcTotalsCSV)">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          RPC Totals
         </button>
       </div>
     </div>
@@ -3506,6 +3514,65 @@ function downloadRpcOriginCSV() {
 const RPC_ORIGIN_XLSX_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
 function RPC_ORIGIN_XLSX_LOAD() {
   return window.XLSX ? Promise.resolve() : _loadScript(RPC_ORIGIN_XLSX_SRC);
+}
+
+// ── RPC Totals CSV ────────────────────────────────────────────────────────
+// One row per RPC: particles that beached on its nesting beaches (any start
+// region, and Florida starts only), and Florida-start particles whose nearest
+// nesting beach at release lies in it. Every Florida-start particle that
+// beached on a nesting beach lands in exactly one "started here" row, so that
+// column's TOTAL matches the Particle Origin Beach export's Florida total.
+function downloadRpcTotalsCSV() {
+  const filtered = getFiltered();
+  const UNASSIGNED = 'Florida (no nearby beach)';
+  const rows = new Map(RPC_ORDER.map(r => [r, {
+    beaches: 0, km: 0, beached: 0, beachedMpw: 0, beachedFl: 0, beachedFlMpw: 0,
+    started: 0, startedMpw: 0 }]));
+  rows.set(UNASSIGNED, { beaches: 0, km: 0, beached: 0, beachedMpw: 0, beachedFl: 0, beachedFlMpw: 0,
+    started: 0, startedMpw: 0 });
+
+  const seen = new Set();
+  (window._NESTING_GEOJSON ? window._NESTING_GEOJSON.features : []).forEach(f => {
+    const name = f.properties.Beach;
+    if (seen.has(name)) return; seen.add(name);
+    const info = beachRpcInfo(name);
+    if (!info || !rows.has(info.rpc)) return;
+    const r = rows.get(info.rpc); r.beaches++; r.km += info.km || 0;
+  });
+
+  filtered.forEach(p => {
+    if (!p.nesting_beach) return;
+    const mpw = p.mpw || 0;
+    const dest = beachRpcInfo(p.nesting_beach);
+    const fromFl = p.start_region === 'Florida';
+    if (dest && rows.has(dest.rpc)) {
+      const r = rows.get(dest.rpc); r.beached++; r.beachedMpw += mpw;
+      if (fromFl) { r.beachedFl++; r.beachedFlMpw += mpw; }
+    }
+    if (fromFl) {
+      const origin = beachRpcInfo(nearestOriginBeach(p.start_lat, p.start_lon));
+      const r = rows.get(origin && rows.has(origin.rpc) ? origin.rpc : UNASSIGNED);
+      r.started++; r.startedMpw += mpw;
+    }
+  });
+
+  const header = ['RPC', 'nesting beaches', 'survey length km',
+    'particles beached here (all origins)', 'mpw_tons beached here (all origins)',
+    'particles beached here (from Florida)', 'mpw_tons beached here (from Florida)',
+    'particles started here (Florida, beached on nesting beach)', 'mpw_tons started here'];
+  const fmt = (name, r) => ['"' + name + '"', r.beaches, +r.km.toFixed(2),
+    r.beached, r.beachedMpw.toFixed(4), r.beachedFl, r.beachedFlMpw.toFixed(4),
+    r.started, r.startedMpw.toFixed(4)].join(',');
+  const total = { beaches: 0, km: 0, beached: 0, beachedMpw: 0, beachedFl: 0, beachedFlMpw: 0, started: 0, startedMpw: 0 };
+  rows.forEach(r => Object.keys(total).forEach(k => total[k] += r[k]));
+  const lines = [header.map(h => '"' + h + '"').join(',')];
+  rows.forEach((r, name) => lines.push(fmt(name, r)));
+  lines.push(fmt('TOTAL', total));
+
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url;
+  a.download = currentModel + '_rpc_totals' + _exportSuffix() + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
 // ── Shapefile builder (client-side) ───────────────────────────────────────
