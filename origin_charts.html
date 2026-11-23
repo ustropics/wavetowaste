@@ -155,7 +155,7 @@
 <div id="navbar">
   <span class="navbar-brand">Wave to Waste</span>
   <div class="navbar-sep"></div>
-  <a class="navbar-back" href="index.html">&larr; Back to map</a>
+  <a class="navbar-back" href="florida.html">&larr; Back to map</a>
 </div>
 
 <div class="page">
@@ -273,7 +273,7 @@ function _loadScript(src, bust) {
   });
 }
 
-// Mirrors index.html's _loadDataset: verifies the particle count against the
+// Mirrors florida.html's _loadDataset: verifies the particle count against the
 // embedded stats total and retries with a cache-busting URL, since a large
 // data file occasionally truncates mid-download without throwing.
 async function _loadDataset(key, maxAttempts = 3) {
@@ -294,7 +294,7 @@ async function _loadDataset(key, maxAttempts = 3) {
     ' particles after ' + maxAttempts + ' attempts.');
 }
 
-// ── Origin matching (same logic as index.html: nearestStartRegion / nearestNestingBeach) ──
+// ── Origin matching (same logic as florida.html: nearestStartRegion / nearestNestingBeach) ──
 function _arrMin(arr){let m=Infinity;for(let i=0;i<arr.length;i++)if(arr[i]<m)m=arr[i];return m;}
 function _arrMax(arr){let m=-Infinity;for(let i=0;i<arr.length;i++)if(arr[i]>m)m=arr[i];return m;}
 function _pointInRing(lon, lat, ring) {
@@ -319,11 +319,11 @@ function _ringMinDistSq(lat, lon, ring) {
 }
 const US_NAMES = new Set(['United States', 'United States of America']);
 // State polygons have coastline gaps the coarser country outline still covers
-// (see nearestStartRegion in index.html); snap those points to the nearest
+// (see nearestStartRegion in florida.html); snap those points to the nearest
 // state within this tolerance instead of leaving them unattributed.
 const US_STATE_SNAP_DEG = 1.1;
 // Beyond this, the "nearest" region from the fallback search below isn't a
-// real match — see REGION_FALLBACK_MAX_DEG in index.html.
+// real match — see REGION_FALLBACK_MAX_DEG in florida.html.
 const REGION_FALLBACK_MAX_DEG = 1.0; // ~110km
 let regionPolygons = [];
 let nestingPolygons = [];
